@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: books
+      POSTGRES_USER: books
+      POSTGRES_PASSWORD: books
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U books -d books"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_PORT: 8080
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: books
+      DB_USER: books
+      DB_PASSWORD: books
+    ports:
+      - "8080:8080"
+
+volumes:
+  dbdata:
