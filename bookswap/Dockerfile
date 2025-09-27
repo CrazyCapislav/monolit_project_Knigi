@@ -1,4 +1,4 @@
-# Сборка jar (используем maven wrapper)
+# Сборка
 FROM eclipse-temurin:24-jdk AS build
 WORKDIR /app
 COPY . .

@@ -7,7 +7,6 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name="book")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Book {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

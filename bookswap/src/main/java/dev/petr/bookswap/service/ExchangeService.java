@@ -1,37 +1,34 @@
 package dev.petr.bookswap.service;
 
-import dev.petr.bookswap.dto.*;
+import dev.petr.bookswap.dto.ExchangeRequestCreateRequest;
+import dev.petr.bookswap.dto.ExchangeRequestResponse;
 import dev.petr.bookswap.entity.*;
 import dev.petr.bookswap.exception.NotFoundException;
-import dev.petr.bookswap.repository.*;
-import jakarta.transaction.Transactional;
+import dev.petr.bookswap.repository.ExchangeRequestRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class ExchangeService {
-    private final ExchangeRequestRepository repo;
-    private final BookRepository bookRepo;
-    private final UserRepository userRepo;
 
-    public ExchangeService(ExchangeRequestRepository repo, BookRepository bookRepo, UserRepository userRepo) {
-        this.repo = repo; this.bookRepo = bookRepo; this.userRepo = userRepo;
-    }
+    private final ExchangeRequestRepository repo;
+    private final BookService bookService;
+    private final UserService userService;
 
     @Transactional
     public ExchangeRequestResponse create(Long requesterId, ExchangeRequestCreateRequest req) {
-        User requester = userRepo.findById(requesterId)
-                .orElseThrow(() -> new NotFoundException("Requester not found"));
-        Book requested = bookRepo.findById(req.bookRequestedId())
-                .orElseThrow(() -> new NotFoundException("Book requested not found"));
+        User requester = userService.getEntity(requesterId);
+        Book requested = bookService.getEntity(req.bookRequestedId());
         User owner = requested.getOwner();
 
         Book offered = null;
         if (req.bookOfferedId() != null) {
-            offered = bookRepo.findById(req.bookOfferedId())
-                    .orElseThrow(() -> new NotFoundException("Offered book not found"));
+            offered = bookService.getEntity(req.bookOfferedId());
             if (!offered.getOwner().getId().equals(requesterId))
                 throw new IllegalStateException("Offered book does not belong to requester");
         }
@@ -58,22 +55,28 @@ public class ExchangeService {
         er.setStatus(ExchangeStatus.ACCEPTED);
         er.setUpdatedAt(OffsetDateTime.now());
         er.getBookRequested().setStatus(BookStatus.EXCHANGED);
-        if (er.getBookOffered() != null) er.getBookOffered().setStatus(BookStatus.EXCHANGED);
+        if (er.getBookOffered() != null)
+            er.getBookOffered().setStatus(BookStatus.EXCHANGED);
 
         return toResponse(er);
     }
 
+    @Transactional(readOnly = true)
     public Page<ExchangeRequestResponse> page(int page, int size) {
         Page<ExchangeRequest> p = repo.findAll(
-                PageRequest.of(page, Math.min(size,50), Sort.by(Sort.Direction.DESC,"id")));
+                PageRequest.of(page, Math.min(size, 50), Sort.by(Sort.Direction.DESC, "id")));
         return p.map(this::toResponse);
     }
 
     private ExchangeRequestResponse toResponse(ExchangeRequest e) {
         return new ExchangeRequestResponse(
-                e.getId(), e.getRequester().getId(), e.getOwner().getId(),
+                e.getId(),
+                e.getRequester().getId(),
+                e.getOwner().getId(),
                 e.getBookRequested().getId(),
                 e.getBookOffered() == null ? null : e.getBookOffered().getId(),
-                e.getStatus().name(), e.getCreatedAt(), e.getUpdatedAt());
+                e.getStatus().name(),
+                e.getCreatedAt(),
+                e.getUpdatedAt());
     }
 }

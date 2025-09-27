@@ -31,7 +31,7 @@ class ExchangeApiIT {
                 .email("o@l").passwordHash("h").displayName("Owner")
                 .role(Role.USER).createdAt(OffsetDateTime.now()).build());
         User req = userRepo.save(User.builder()
-                .email("r@l").passwordHash("h").displayName("Req")
+                .email("req_unique@l").passwordHash("h").displayName("Req")
                 .role(Role.USER).createdAt(OffsetDateTime.now()).build());
         Book b = bookRepo.save(Book.builder()
                 .title("B").author("A").owner(owner).status(BookStatus.AVAILABLE)
@@ -39,13 +39,16 @@ class ExchangeApiIT {
         ownerId = owner.getId(); requesterId = req.getId(); bookId = b.getId();
     }
 
-    @Test void create_exchange() throws Exception {
+    @Test
+    void createExchange() throws Exception {
         mvc.perform(post("/api/v1/exchanges")
                         .header("X-User-Id", requesterId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                   {"bookRequestedId": %d}
-                """.formatted(bookId)))
+                            {
+                              "book_requested_id": %d
+                            }
+                        """.formatted(bookId)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("WAITING"));
     }

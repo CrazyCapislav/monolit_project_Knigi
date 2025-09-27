@@ -11,7 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class UserControllerMvcTest {
@@ -23,10 +23,10 @@ class UserControllerMvcTest {
             .build();
     private final ObjectMapper om = new ObjectMapper();
 
-    @Test void register_ok() throws Exception {
+    @Test
+    void registerOk() throws Exception {
         when(svc.register(any())).thenReturn(
-                new UserResponse(1L, "valid@mail.com", "Valid Name", "USER")
-        );
+                new UserResponse(1L, "valid@mail.com", "Valid Name", "USER"));
 
         mvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -36,13 +36,14 @@ class UserControllerMvcTest {
                 .andExpect(jsonPath("$.id").value(1));
     }
 
+    @Test
+    void registerInvalid() throws Exception {
+        var bad = new UserCreateRequest("bad", "x", "p");
 
-    @Test void register_validationError() throws Exception {
         mvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(
-                                new UserCreateRequest("bad-mail","X","p"))))
+                        .content(om.writeValueAsString(bad)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Bad Request"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 }

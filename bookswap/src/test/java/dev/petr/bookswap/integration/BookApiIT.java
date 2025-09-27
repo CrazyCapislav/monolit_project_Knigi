@@ -36,8 +36,13 @@ class BookApiIT {
                         .header("X-User-Id", uid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                    {"title":"Clean Code","author":"R. Martin","condition":"GOOD","genreIds":[]}
-                """))
+                            {
+                              "title":"Clean Code",
+                              "author":"R. Martin",
+                              "condition":"GOOD",
+                              "genre_ids":[]
+                            }
+                        """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Clean Code"));
 

@@ -1,6 +1,7 @@
 package dev.petr.bookswap.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -26,8 +27,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiError> handleConstraint(ConstraintViolationException ex, HttpServletRequest req) {
-        String msg = ex.getConstraintViolations().stream().findFirst().map(v -> v.getMessage()).orElse("Constraint violation");
+        String msg = ex.getConstraintViolations().stream()
+                .findFirst().map(ConstraintViolation::getMessage).orElse("Constraint violation");
         return build(HttpStatus.BAD_REQUEST, msg, req.getRequestURI());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)          // ← NEW
+    public ResponseEntity<ApiError> handleIllegal(IllegalStateException ex, HttpServletRequest req) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), req.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)

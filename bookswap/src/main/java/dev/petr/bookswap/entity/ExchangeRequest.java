@@ -5,7 +5,7 @@ import lombok.*;
 
 import java.time.OffsetDateTime;
 
-@Entity @Table(name="exchange_request")
+@Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ExchangeRequest {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,14 +1,17 @@
 server:
   port: ${APP_PORT:8080}
-  tomcat:
-    # На JDK >= 24 Tomcat APR по умолчанию отключён; при желании включи:
-    use-apr: when-available
 
 spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:books}
     username: ${DB_USER:books}
     password: ${DB_PASSWORD:books}
+    hikari:
+      maximum-pool-size: 10
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -17,6 +20,7 @@ spring:
       hibernate:
         format_sql: true
     show-sql: false
+
   flyway:
     enabled: true
     locations: classpath:db/migration

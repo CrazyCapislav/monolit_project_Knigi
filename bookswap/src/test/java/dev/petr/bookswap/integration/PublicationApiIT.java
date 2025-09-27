@@ -33,13 +33,19 @@ class PublicationApiIT {
                 .role(Role.PUBLISHER).createdAt(OffsetDateTime.now()).build()).getId();
     }
 
-    @Test void submit_publication() throws Exception {
+    @Test
+    void submitPublication() throws Exception {
         mvc.perform(post("/api/v1/publications")
                         .header("X-User-Id", requesterId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                    {"title":"Book","author":"Anon","message":"pls","publisherId":%d}
-                """.formatted(publisherId)))
+                            {
+                              "title":"Book",
+                              "author":"Anon",
+                              "message":"pls",
+                              "publisher_id":%d
+                            }
+                        """.formatted(publisherId)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("SUBMITTED"));
     }

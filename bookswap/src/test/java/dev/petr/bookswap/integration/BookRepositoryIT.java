@@ -23,14 +23,13 @@ class BookRepositoryIT {
 
     @Test
     void saveAndLoad() {
-        User u = User.builder()
+        User u = userRepo.save(User.builder()
                 .email("u@example.com")
                 .passwordHash("hash")
                 .displayName("User")
                 .role(Role.USER)
                 .createdAt(OffsetDateTime.now())
-                .build();
-        u = userRepo.save(u);
+                .build());
 
         Book b = Book.builder()
                 .title("The Pragmatic Programmer")
@@ -42,8 +41,8 @@ class BookRepositoryIT {
                 .condition(BookCondition.GOOD)
                 .createdAt(OffsetDateTime.now())
                 .build();
-        b = bookRepo.save(b);
 
+        b = bookRepo.save(b);
         assertThat(bookRepo.findById(b.getId())).isPresent();
     }
 }

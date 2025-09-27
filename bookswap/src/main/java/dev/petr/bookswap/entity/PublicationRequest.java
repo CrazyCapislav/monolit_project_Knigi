@@ -5,7 +5,7 @@ import lombok.*;
 
 import java.time.OffsetDateTime;
 
-@Entity @Table(name="publication_request")
+@Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class PublicationRequest {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

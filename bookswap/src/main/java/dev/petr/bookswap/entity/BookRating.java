@@ -6,7 +6,6 @@ import lombok.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name="book_rating")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @IdClass(BookRatingId.class)
 public class BookRating {
