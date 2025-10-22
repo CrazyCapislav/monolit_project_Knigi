@@ -20,6 +20,17 @@ public class ExchangeService {
     private final BookService bookService;
     private final UserService userService;
 
+    /**
+     * Create an exchange request for book swap.
+     * 
+     * @Transactional is used here for the following reasons:
+     * 1. Loading related entities (User, Book) from database
+     * 2. Validating the owner of the offered book
+     * 3. Creating new ExchangeRequest record
+     * 
+     * All operations must be atomic: if validation fails,
+     * no changes should be made to the database.
+     */
     @Transactional
     public ExchangeRequestResponse create(Long requesterId, ExchangeRequestCreateRequest req) {
         User requester = userService.getEntity(requesterId);
@@ -45,6 +56,47 @@ public class ExchangeService {
         return toResponse(repo.save(er));
     }
 
+    /**
+     * Accept an exchange request by the book owner.
+     * 
+     * ⚠️ CRITICAL TRANSACTION ⚠️
+     * 
+     * @Transactional is necessary here to ensure ACID properties:
+     * 
+     * ATOMICITY:
+     * - Update exchange request status (ExchangeRequest.status = ACCEPTED)
+     * - Set update timestamp (ExchangeRequest.updatedAt)
+     * - Change requested book status (Book.status = EXCHANGED)
+     * - Change offered book status (Book.status = EXCHANGED), if present
+     * 
+     * All these operations must execute ATOMICALLY: all together or nothing.
+     * 
+     * Critical situation example WITHOUT transaction:
+     * 1. Exchange request status changed to ACCEPTED ✓
+     * 2. Timestamp updated ✓
+     * 3. First book status changed to EXCHANGED ✓
+     * 4. ⚠️ FAILURE ⚠️ - database unavailable / network error
+     * 5. Second book status NOT changed ✗
+     * 
+     * RESULT: Data in inconsistent state!
+     * - Exchange marked as accepted
+     * - But one book is still available for other exchanges
+     * - Possible **double exchange** of the same book
+     * - **Business logic violated**
+     * 
+     * With transaction: on any error, ALL changes are rolled back,
+     * system remains in consistent state.
+     * 
+     * CONSISTENCY:
+     * Ensures that books involved in exchange cannot be
+     * in multiple exchanges simultaneously (isolation level provides locking).
+     * 
+     * ISOLATION:
+     * Other transactions don't see intermediate states of changes.
+     * 
+     * DURABILITY:
+     * After transaction commit, all changes are persisted in DB.
+     */
     @Transactional
     public ExchangeRequestResponse accept(Long exchangeId, Long ownerId) {
         ExchangeRequest er = repo.findById(exchangeId)
