@@ -1,5 +1,38 @@
 import { API_BASE_URL } from '../utils/constants';
 
+
+const toSnakeCase = (obj) => {
+  if (obj === null || typeof obj !== 'object' || obj instanceof Date) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(toSnakeCase);
+  }
+
+  return Object.keys(obj).reduce((result, key) => {
+    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    result[snakeKey] = toSnakeCase(obj[key]);
+    return result;
+  }, {});
+};
+
+const toCamelCase = (obj) => {
+  if (obj === null || typeof obj !== 'object' || obj instanceof Date) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(toCamelCase);
+  }
+
+  return Object.keys(obj).reduce((result, key) => {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    result[camelKey] = toCamelCase(obj[key]);
+    return result;
+  }, {});
+};
+
 const getHeaders = (userId) => {
   const headers = {
     'Content-Type': 'application/json'
@@ -16,8 +49,18 @@ export const apiRequest = async (endpoint, options = {}) => {
   const userId = localStorage.getItem('userId');
   const url = `${API_BASE_URL}${endpoint}`;
 
+  let bodyToSend = options.body;
+  if (options.body && typeof options.body === 'string') {
+    try {
+      const parsed = JSON.parse(options.body);
+      bodyToSend = JSON.stringify(toSnakeCase(parsed));
+    } catch (e) {
+    }
+  }
+
   const config = {
     ...options,
+    body: bodyToSend,
     headers: {
       ...getHeaders(userId),
       ...options.headers
@@ -32,12 +75,12 @@ export const apiRequest = async (endpoint, options = {}) => {
       throw new Error(error.message || `HTTP error! status: ${response.status}`);
     }
 
-    // Для 204 No Content не пытаемся парсить JSON
     if (response.status === 204) {
       return null;
     }
 
-    return await response.json();
+    const data = await response.json();
+    return toCamelCase(data);
   } catch (error) {
     console.error('API Error:', error);
     throw error;
