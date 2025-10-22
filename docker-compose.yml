@@ -19,7 +19,7 @@ services:
       - bookswap-network
 
   app:
-    build: .
+    build: ./bookswap
     container_name: bookswap-backend
     depends_on:
       db:
@@ -44,7 +44,7 @@ services:
       start_period: 40s
 
   frontend:
-    build: ../frontend
+    build: ./frontend
     container_name: bookswap-frontend
     depends_on:
       app:
@@ -67,3 +67,4 @@ volumes:
 networks:
   bookswap-network:
     driver: bridge
+
