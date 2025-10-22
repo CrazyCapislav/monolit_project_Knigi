@@ -21,4 +21,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
         order by b.id desc
         """)
     List<Book> findTop50ByIdLessThanFetchGenres(Long afterId, Pageable pageable);
+
+    List<Book> findByOwnerIdOrderByCreatedAtDesc(Long ownerId);
 }

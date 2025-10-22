@@ -59,6 +59,13 @@ public class BookService {
         return bookRepo.findTop50ByIdLessThanFetchGenres(cursor, PageRequest.of(0, l)).stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<BookResponse> findByOwnerId(Long ownerId) {
+        return bookRepo.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     private BookResponse toResponse(Book b) {
         return new BookResponse(b.getId(), b.getTitle(), b.getAuthor(), b.getIsbn(), b.getPublishedYear(), b.getStatus().name(), b.getCondition().name(), b.getCreatedAt(), b.getOwner().getId(), b.getGenres() == null ? Set.of() : b.getGenres().stream().map(Genre::getName).collect(Collectors.toSet()));
     }
