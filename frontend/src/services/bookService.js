@@ -22,6 +22,12 @@ export const bookService = {
     });
   },
 
+  async deleteBook(id) {
+    return await apiRequest(`/books/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
   async getBookById(id) {
     return await apiRequest(`/books/${id}`);
   }

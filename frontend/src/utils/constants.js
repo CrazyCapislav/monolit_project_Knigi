@@ -1,6 +1,4 @@
-// API Base URL configuration
-// In production (Docker), nginx proxies /api/* to backend
-// In development, connect directly to backend on localhost:8080
+
 export const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
     ? '/api/v1' 
@@ -8,10 +6,9 @@ export const API_BASE_URL = process.env.REACT_APP_API_URL ||
 
 export const BOOK_CONDITIONS = {
   NEW: 'Новая',
-  EXCELLENT: 'Отличное',
   GOOD: 'Хорошее',
   FAIR: 'Удовлетворительное',
-  POOR: 'Плохое'
+  BAD: 'Плохое'
 };
 
 export const REQUEST_STATUSES = {

@@ -12,12 +12,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 
+/**
+ * Service for managing users and authentication.
+ * Handles user registration and retrieval.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository repo;
 
+    /**
+     * Register a new user in the system.
+     * Default role is USER.
+     * 
+     * @param req user registration request
+     * @return created user response
+     */
     @Transactional
     public UserResponse register(UserCreateRequest req) {
         User u = User.builder().email(req.email()).passwordHash(req.password()) // TODO: hash in lab-2
@@ -25,6 +36,13 @@ public class UserService {
         return toResponse(repo.save(u));
     }
 
+    /**
+     * Find user by ID.
+     * 
+     * @param id user ID
+     * @return user response
+     * @throws NotFoundException if user not found
+     */
     @Transactional(readOnly = true)
     public UserResponse findById(Long id) {
         return toResponse(getEntity(id));

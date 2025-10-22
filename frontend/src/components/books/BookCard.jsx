@@ -19,13 +19,20 @@ const BookCard = ({ book, onClick }) => {
             {BOOK_CONDITIONS[book.condition] || book.condition}
           </span>
         </div>
-        {book.genres && book.genres.length > 0 && (
+        {book.genres && (Array.isArray(book.genres) ? book.genres.length > 0 : Object.keys(book.genres).length > 0) && (
           <div className="book-genres">
-            {book.genres.map((genre) => (
-              <span key={genre.id} className="genre-tag">
-                {genre.name}
-              </span>
-            ))}
+            {Array.isArray(book.genres) 
+              ? book.genres.map((genre, index) => (
+                  <span key={index} className="genre-tag">
+                    {typeof genre === 'string' ? genre : genre.name || genre}
+                  </span>
+                ))
+              : Object.values(book.genres).map((genreName, index) => (
+                  <span key={index} className="genre-tag">
+                    {genreName}
+                  </span>
+                ))
+            }
           </div>
         )}
       </div>

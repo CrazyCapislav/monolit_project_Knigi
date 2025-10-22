@@ -25,7 +25,6 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
-# CORS конфигурация для frontend
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 

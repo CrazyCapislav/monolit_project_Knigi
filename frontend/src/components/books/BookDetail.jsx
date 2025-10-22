@@ -4,7 +4,7 @@ import { BOOK_CONDITIONS } from '../../utils/constants';
 import { formatDate } from '../../utils/helpers';
 import './BookDetail.css';
 
-const BookDetail = ({ book, onClose, onExchange }) => {
+const BookDetail = ({ book, onClose, onExchange, onDelete, isOwner = false }) => {
     return (
         <div className="book-detail">
             <div className="book-detail-cover">
@@ -64,11 +64,20 @@ const BookDetail = ({ book, onClose, onExchange }) => {
                     <div className="detail-section">
                         <h3 className="detail-section-title">Жанры</h3>
                         <div className="detail-genres">
-                            {book.genres.map(genre => (
-                                <span key={genre.id} className="genre-badge">
-                  {genre.name}
-                </span>
-                            ))}
+                            {Array.isArray(book.genres) 
+                                ? book.genres.map((genre, index) => (
+                                    <span key={index} className="genre-badge">
+                                      {typeof genre === 'string' ? genre : genre.name}
+                                    </span>
+                                  ))
+                                : typeof book.genres === 'object' && book.genres !== null
+                                    ? Object.values(book.genres).map((genreName, index) => (
+                                        <span key={index} className="genre-badge">
+                                          {genreName}
+                                        </span>
+                                      ))
+                                    : null
+                            }
                         </div>
                     </div>
                 )}
@@ -79,11 +88,11 @@ const BookDetail = ({ book, onClose, onExchange }) => {
                     <div className="detail-info-grid">
                         <div className="detail-info-item">
                             <span className="detail-label">Владелец (ID):</span>
-                            <span className="detail-value">{book.owner_id}</span>
+                            <span className="detail-value">{book.ownerId || book.owner_id}</span>
                         </div>
                         <div className="detail-info-item">
                             <span className="detail-label">Дата добавления:</span>
-                            <span className="detail-value">{formatDate(book.created_at)}</span>
+                            <span className="detail-value">{formatDate(book.createdAt || book.created_at)}</span>
                         </div>
                     </div>
                 </div>
@@ -93,9 +102,17 @@ const BookDetail = ({ book, onClose, onExchange }) => {
                 <Button variant="outline" onClick={onClose}>
                     Закрыть
                 </Button>
-                <Button variant="primary" onClick={onExchange}>
-                    📚 Обменяться
-                </Button>
+                {isOwner ? (
+                    <Button variant="danger" onClick={onDelete}>
+                        🗑️ Удалить
+                    </Button>
+                ) : (
+                    onExchange && (
+                        <Button variant="primary" onClick={onExchange}>
+                            📚 Обменяться
+                        </Button>
+                    )
+                )}
             </div>
         </div>
     );

@@ -37,6 +37,10 @@ public class ExchangeService {
         Book requested = bookService.getEntity(req.bookRequestedId());
         User owner = requested.getOwner();
 
+        if (owner.getId().equals(requesterId)) {
+            throw new IllegalStateException("Cannot create exchange request for your own book");
+        }
+
         Book offered = null;
         if (req.bookOfferedId() != null) {
             offered = bookService.getEntity(req.bookOfferedId());

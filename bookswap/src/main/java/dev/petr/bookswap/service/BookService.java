@@ -16,6 +16,10 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Service for managing books in the book exchange system.
+ * Handles CRUD operations, pagination, and infinite scroll feed.
+ */
 @Service
 @RequiredArgsConstructor
 public class BookService {
@@ -24,6 +28,13 @@ public class BookService {
     private final UserService userService;
     private final GenreService genreService;
 
+    /**
+     * Create a new book entry.
+     * 
+     * @param ownerId ID of the book owner
+     * @param req book creation request with title, author, genres, etc.
+     * @return created book response
+     */
     @Transactional
     public BookResponse create(Long ownerId, BookCreateRequest req) {
         User owner = userService.getEntity(ownerId);
@@ -34,6 +45,14 @@ public class BookService {
         return toResponse(bookRepo.save(book));
     }
 
+    /**
+     * Find all books with pagination.
+     * Returns page metadata including total count in X-Total-Count header.
+     * 
+     * @param page page number (0-based)
+     * @param size page size (max 50)
+     * @return page of books
+     */
     @Transactional(readOnly = true)
     public Page<BookResponse> findAll(int page, int size) {
         return page(page, size);
@@ -52,11 +71,50 @@ public class BookService {
         return p.map(this::toResponse);
     }
 
+    /**
+     * Get infinite scroll feed of books.
+     * Uses cursor-based pagination without total count.
+     * 
+     * @param afterId cursor - last book ID from previous request
+     * @param limit number of books to return (max 50)
+     * @return list of books after the cursor
+     */
     @Transactional(readOnly = true)
     public java.util.List<BookResponse> feed(Long afterId, int limit) {
         int l = Math.min(limit <= 0 ? 50 : limit, 50);
         Long cursor = (afterId == null || afterId <= 0) ? Long.MAX_VALUE : afterId;
         return bookRepo.findTop50ByIdLessThanFetchGenres(cursor, PageRequest.of(0, l)).stream().map(this::toResponse).toList();
+    }
+
+    /**
+     * Find all books owned by a specific user.
+     * 
+     * @param ownerId ID of the book owner
+     * @return list of books owned by the user
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<BookResponse> findByOwnerId(Long ownerId) {
+        return bookRepo.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    /**
+     * Delete a book.
+     * Only the owner can delete their book.
+     * 
+     * @param bookId ID of the book to delete
+     * @param ownerId ID of the requesting user (must be owner)
+     * @throws NotFoundException if book not found
+     * @throws IllegalStateException if user is not the owner
+     */
+    @Transactional
+    public void delete(Long bookId, Long ownerId) {
+        Book book = getEntity(bookId);
+        if (!book.getOwner().getId().equals(ownerId)) {
+            throw new IllegalStateException("Only owner can delete the book");
+        }
+        bookRepo.delete(book);
     }
 
     private BookResponse toResponse(Book b) {

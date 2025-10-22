@@ -20,11 +20,10 @@ const BooksPage = () => {
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
 
-  // ДВА отдельных состояния для модальных окон
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
   const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
@@ -62,41 +61,33 @@ const BooksPage = () => {
     setCurrentPage(0);
   };
 
-  // Клик на книгу - открываем детали
   const handleBookClick = (book) => {
     setSelectedBook(book);
     setShowDetailModal(true);
   };
 
-  // Кнопка "Обменяться" в деталях книги
   const handleExchangeClick = () => {
     if (!isAuthenticated) {
-      showToast('Пожалуйста, войдите в систему для создания заявки на обмен', 'warning');
+      showToast('Please sign in to create exchange request', 'warning');
       return;
     }
 
-    // Закрываем модалку деталей
     setShowDetailModal(false);
 
-    // Небольшая задержка для плавного перехода
     setTimeout(() => {
       setShowExchangeModal(true);
     }, 300);
   };
 
-  // Успешное создание заявки на обмен
   const handleExchangeSubmit = () => {
     setShowExchangeModal(false);
     setSelectedBook(null);
   };
 
-  // Закрытие модалки обмена
   const handleCloseExchangeModal = () => {
     setShowExchangeModal(false);
-    // Не очищаем selectedBook, чтобы можно было вернуться к деталям
   };
 
-  // Закрытие модалки деталей
   const handleCloseDetailModal = () => {
     setShowDetailModal(false);
     setSelectedBook(null);
@@ -158,7 +149,6 @@ const BooksPage = () => {
             </div>
         )}
 
-        {/* Модальное окно с деталями книги */}
         <Modal
             isOpen={showDetailModal}
             onClose={handleCloseDetailModal}
@@ -169,11 +159,11 @@ const BooksPage = () => {
                   book={selectedBook}
                   onClose={handleCloseDetailModal}
                   onExchange={handleExchangeClick}
+                  isOwner={currentUser?.id === (selectedBook.ownerId || selectedBook.owner_id)}
               />
           )}
         </Modal>
 
-        {/* Модальное окно создания заявки на обмен */}
         <Modal
             isOpen={showExchangeModal}
             onClose={handleCloseExchangeModal}
@@ -188,7 +178,6 @@ const BooksPage = () => {
           )}
         </Modal>
 
-        {/* Toast уведомления */}
         <Toast
             message={toast.message}
             type={toast.type}

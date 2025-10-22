@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import Button from '../common/Button';
 import Toast from '../common/Toast';
 import { useToast } from '../../hooks/useToast';
@@ -14,7 +13,6 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
     const [selectedBookId, setSelectedBookId] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingBooks, setLoadingBooks] = useState(true);
-    const { currentUser } = useAuth();
 
     useEffect(() => {
         loadMyBooks();
@@ -23,12 +21,11 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
     const loadMyBooks = async () => {
         try {
             setLoadingBooks(true);
-            const data = await bookService.getBooks(0, 100);
-            const allBooks = Array.isArray(data) ? data : data.content || [];
-            const myBooksFiltered = allBooks.filter(b => b.owner_id === currentUser?.id);
-            setMyBooks(myBooksFiltered);
+            const myBooksData = await bookService.getMyBooks();
+            setMyBooks(myBooksData || []);
         } catch (error) {
             console.error('Failed to load books:', error);
+            setMyBooks([]);
         } finally {
             setLoadingBooks(false);
         }
@@ -45,9 +42,8 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
             };
 
             await exchangeService.createExchange(exchangeData);
-            showToast('Заявка на обмен успешно создана!', 'success');
+            showToast('Exchange request created successfully!', 'success');
 
-            // Закрываем форму через 1 секунду после показа toast
             setTimeout(() => {
                 if (onSubmit) {
                     onSubmit();
@@ -55,7 +51,7 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
             }, 1000);
         } catch (error) {
             console.error('Failed to create exchange:', error);
-            showToast('Ошибка при создании заявки на обмен', 'error');
+            showToast('Error creating exchange request', 'error');
         } finally {
             setLoading(false);
         }
