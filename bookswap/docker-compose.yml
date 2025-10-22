@@ -15,9 +15,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - bookswap-network
 
   app:
     build: .
+    container_name: bookswap-backend
     depends_on:
       db:
         condition: service_healthy
@@ -28,9 +31,39 @@ services:
       DB_NAME: books
       DB_USER: books
       DB_PASSWORD: books
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:80
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:80,http://localhost
     ports:
       - "8080:8080"
+    networks:
+      - bookswap-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build: ../frontend
+    container_name: bookswap-frontend
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - bookswap-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
 
 volumes:
   dbdata:
+
+networks:
+  bookswap-network:
+    driver: bridge
