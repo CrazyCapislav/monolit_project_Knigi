@@ -1,0 +1,141 @@
+.book-detail {
+    max-width: 600px;
+    padding: 10px 0;
+}
+
+.book-detail-cover {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.detail-book-icon {
+    font-size: 80px;
+}
+
+.book-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.detail-section {
+    padding: 16px;
+    background-color: #F9FAFB;
+    border-radius: 12px;
+    border-left: 4px solid #4F46E5;
+}
+
+.detail-section-title {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.detail-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.detail-info-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6B7280;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: #111827;
+    text-align: right;
+}
+
+.condition-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #DBEAFE;
+    color: #1E40AF;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-available {
+    background-color: #0bfa7b;
+    color: #059669;
+}
+
+.status-exchanged {
+    background-color: #fb2b2b;
+    color: #DC2626;
+}
+
+.detail-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.genre-badge {
+    padding: 6px 14px;
+    background-color: #EEF2FF;
+    color: #4F46E5;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.book-detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 2px solid #E5E7EB;
+}
+
+@media (max-width: 768px) {
+    .detail-info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .detail-value {
+        text-align: left;
+    }
+
+    .book-detail-actions {
+        flex-direction: column-reverse;
+    }
+
+    .book-detail-actions button {
+        width: 100%;
+    }
+}

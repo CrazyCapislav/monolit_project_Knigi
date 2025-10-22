@@ -1,0 +1,71 @@
+.exchanges-page {
+  padding-bottom: 40px;
+}
+
+.exchanges-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.exchange-card {
+  position: relative;
+}
+
+.exchange-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.exchange-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.exchange-info {
+  margin-bottom: 16px;
+}
+
+.exchange-info p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.date {
+  font-size: 12px !important;
+  color: #6B7280 !important;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  margin: 0 0 12px 0;
+  font-size: 24px;
+  color: #111827;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+  color: #6B7280;
+}

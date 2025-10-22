@@ -1,0 +1,84 @@
+.exchange-form {
+    padding: 10px 0;
+}
+
+.book-info-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: #F3F4F6;
+    border-radius: 12px;
+}
+
+.book-info-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.selected-book {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.book-icon {
+    font-size: 48px;
+}
+
+.selected-book h4 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.selected-book p {
+    margin: 2px 0;
+    font-size: 14px;
+    color: #6B7280;
+}
+
+.form-section {
+    margin-bottom: 24px;
+}
+
+.form-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.book-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.book-select:focus {
+    outline: none;
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.no-books-message {
+    padding: 12px;
+    background-color: #FEF3C7;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #92400E;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
