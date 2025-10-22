@@ -99,6 +99,24 @@ public class BookService {
                 .toList();
     }
 
+    /**
+     * Delete a book.
+     * Only the owner can delete their book.
+     * 
+     * @param bookId ID of the book to delete
+     * @param ownerId ID of the requesting user (must be owner)
+     * @throws NotFoundException if book not found
+     * @throws IllegalStateException if user is not the owner
+     */
+    @Transactional
+    public void delete(Long bookId, Long ownerId) {
+        Book book = getEntity(bookId);
+        if (!book.getOwner().getId().equals(ownerId)) {
+            throw new IllegalStateException("Only owner can delete the book");
+        }
+        bookRepo.delete(book);
+    }
+
     private BookResponse toResponse(Book b) {
         return new BookResponse(b.getId(), b.getTitle(), b.getAuthor(), b.getIsbn(), b.getPublishedYear(), b.getStatus().name(), b.getCondition().name(), b.getCreatedAt(), b.getOwner().getId(), b.getGenres() == null ? Set.of() : b.getGenres().stream().map(Genre::getName).collect(Collectors.toSet()));
     }

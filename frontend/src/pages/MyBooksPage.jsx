@@ -59,6 +59,24 @@ const MyBooksPage = () => {
     setSelectedBook(null);
   };
 
+  const handleDeleteBook = async () => {
+    if (!selectedBook) return;
+    
+    if (!window.confirm(`Вы уверены, что хотите удалить книгу "${selectedBook.title}"?`)) {
+      return;
+    }
+
+    try {
+      await bookService.deleteBook(selectedBook.id);
+      setShowDetailModal(false);
+      setSelectedBook(null);
+      loadMyBooks();
+    } catch (error) {
+      console.error('Failed to delete book:', error);
+      alert('Ошибка при удалении книги');
+    }
+  };
+
   return (
     <div className="my-books-page">
       <div className="page-header">
@@ -93,7 +111,8 @@ const MyBooksPage = () => {
           <BookDetail
             book={selectedBook}
             onClose={handleCloseDetail}
-            onExchange={() => alert('Функция обмена в разработке')}
+            onDelete={handleDeleteBook}
+            isOwner={true}
           />
         )}
       </Modal>

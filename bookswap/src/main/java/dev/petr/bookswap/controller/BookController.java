@@ -74,4 +74,16 @@ public class BookController {
     ) {
         return service.findByOwnerId(userId);
     }
+
+    @Operation(summary = "Удалить книгу")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "ID книги")
+            @PathVariable Long id,
+            @Parameter(description = "ID владельца")
+            @RequestHeader("X-User-Id") Long ownerId
+    ) {
+        service.delete(id, ownerId);
+        return ResponseEntity.noContent().build();
+    }
 }
