@@ -69,4 +69,45 @@ class ExchangeServiceTest {
         assertThatThrownBy(() -> service.accept(5L, 99L))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    void shouldThrowWhenExchangeNotFound() {
+        when(repo.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.accept(999L, 1L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Exchange not found");
+    }
+
+    @Test
+    void shouldFailWhenOfferedBookDoesNotBelongToRequester() {
+        Book offeredBook = Book.builder().id(20L).owner(owner).build();
+        when(userService.getEntity(1L)).thenReturn(requester);
+        when(bookService.getEntity(10L)).thenReturn(requested);
+        when(bookService.getEntity(20L)).thenReturn(offeredBook);
+
+        assertThatThrownBy(() -> service.create(1L, new ExchangeRequestCreateRequest(10L, 20L)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("does not belong to requester");
+    }
+
+    @Test
+    void shouldAcceptExchangeWithOfferedBook() {
+        Book offeredBook = Book.builder().id(20L).owner(requester)
+                .status(BookStatus.AVAILABLE).build();
+        
+        ExchangeRequest er = ExchangeRequest.builder()
+                .id(5L).requester(requester).owner(owner)
+                .bookRequested(requested).bookOffered(offeredBook)
+                .status(ExchangeStatus.WAITING)
+                .createdAt(OffsetDateTime.now()).build();
+
+        when(repo.findById(5L)).thenReturn(Optional.of(er));
+
+        var resp = service.accept(5L, 2L);
+
+        assertThat(resp.status()).isEqualTo("ACCEPTED");
+        assertThat(requested.getStatus()).isEqualTo(BookStatus.EXCHANGED);
+        assertThat(offeredBook.getStatus()).isEqualTo(BookStatus.EXCHANGED);
+    }
 }
