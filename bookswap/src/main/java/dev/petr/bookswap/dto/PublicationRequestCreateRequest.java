@@ -6,5 +6,5 @@ public record PublicationRequestCreateRequest(
         @NotBlank String title,
         @NotBlank String author,
         String message,
-        Long publisherId               // конкретное издательство
+        Long publisherId
 ) {}

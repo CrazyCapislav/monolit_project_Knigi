@@ -21,7 +21,7 @@ const BookForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [loading, setLoading] = useState(false);
   const [loadingGenres, setLoadingGenres] = useState(true);
 
-  // Состояние для добавления нового жанра
+
   const [showAddGenreModal, setShowAddGenreModal] = useState(false);
   const [newGenreName, setNewGenreName] = useState('');
   const [addingGenre, setAddingGenre] = useState(false);
@@ -61,22 +61,22 @@ const BookForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
   const handleAddGenre = async () => {
     if (!newGenreName.trim()) {
-      setGenreError('Введите название жанра');
+      setGenreError('Enter genre name');
       return;
     }
 
     if (newGenreName.length < 2 || newGenreName.length > 60) {
-      setGenreError('Название должно быть от 2 до 60 символов');
+      setGenreError('Name must be between 2 and 60 characters');
       return;
     }
 
-    // Проверяем, не существует ли уже такой жанр
+ 
     const existingGenre = genres.find(
         g => g.name.toLowerCase() === newGenreName.toLowerCase()
     );
 
     if (existingGenre) {
-      setGenreError('Такой жанр уже существует');
+      setGenreError('Genre already exists');
       return;
     }
 
@@ -84,23 +84,20 @@ const BookForm = ({ onSubmit, onCancel, initialData = {} }) => {
     try {
       const newGenre = await genreService.createGenre({ name: newGenreName });
 
-      // Добавляем новый жанр в список
       setGenres(prev => [...prev, newGenre]);
 
-      // Автоматически выбираем новый жанр
       setFormData(prev => ({
         ...prev,
         genreIds: [...prev.genreIds, newGenre.id]
       }));
 
-      // Закрываем модалку и очищаем форму
       setShowAddGenreModal(false);
       setNewGenreName('');
       setGenreError('');
 
     } catch (error) {
       console.error('Failed to create genre:', error);
-      setGenreError('Ошибка при создании жанра: ' + (error.message || ''));
+      setGenreError('Error creating genre: ' + (error.message || ''));
     } finally {
       setAddingGenre(false);
     }
@@ -108,10 +105,10 @@ const BookForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.title.trim()) newErrors.title = 'Название обязательно';
-    if (!formData.author.trim()) newErrors.author = 'Автор обязателен';
+    if (!formData.title.trim()) newErrors.title = 'Title is required';
+    if (!formData.author.trim()) newErrors.author = 'Author is required';
     if (formData.publishedYear && (formData.publishedYear < 0 || formData.publishedYear > 2100)) {
-      newErrors.publishedYear = 'Год должен быть от 0 до 2100';
+      newErrors.publishedYear = 'Year must be between 0 and 2100';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

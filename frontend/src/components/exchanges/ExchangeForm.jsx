@@ -45,9 +45,8 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
             };
 
             await exchangeService.createExchange(exchangeData);
-            showToast('Заявка на обмен успешно создана!', 'success');
+            showToast('Exchange request created successfully!', 'success');
 
-            // Закрываем форму через 1 секунду после показа toast
             setTimeout(() => {
                 if (onSubmit) {
                     onSubmit();
@@ -55,7 +54,7 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
             }, 1000);
         } catch (error) {
             console.error('Failed to create exchange:', error);
-            showToast('Ошибка при создании заявки на обмен', 'error');
+            showToast('Error creating exchange request', 'error');
         } finally {
             setLoading(false);
         }
