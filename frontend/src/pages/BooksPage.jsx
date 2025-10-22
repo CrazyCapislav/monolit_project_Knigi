@@ -23,7 +23,7 @@ const BooksPage = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
   const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
@@ -159,6 +159,7 @@ const BooksPage = () => {
                   book={selectedBook}
                   onClose={handleCloseDetailModal}
                   onExchange={handleExchangeClick}
+                  isOwner={currentUser?.id === (selectedBook.ownerId || selectedBook.owner_id)}
               />
           )}
         </Modal>
