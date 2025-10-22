@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import Button from '../common/Button';
 import Toast from '../common/Toast';
 import { useToast } from '../../hooks/useToast';
@@ -14,7 +13,6 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
     const [selectedBookId, setSelectedBookId] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingBooks, setLoadingBooks] = useState(true);
-    const { currentUser } = useAuth();
 
     useEffect(() => {
         loadMyBooks();
@@ -23,12 +21,11 @@ const ExchangeForm = ({ book, onSubmit, onCancel }) => {
     const loadMyBooks = async () => {
         try {
             setLoadingBooks(true);
-            const data = await bookService.getBooks(0, 100);
-            const allBooks = Array.isArray(data) ? data : data.content || [];
-            const myBooksFiltered = allBooks.filter(b => b.owner_id === currentUser?.id);
-            setMyBooks(myBooksFiltered);
+            const myBooksData = await bookService.getMyBooks();
+            setMyBooks(myBooksData || []);
         } catch (error) {
             console.error('Failed to load books:', error);
+            setMyBooks([]);
         } finally {
             setLoadingBooks(false);
         }
