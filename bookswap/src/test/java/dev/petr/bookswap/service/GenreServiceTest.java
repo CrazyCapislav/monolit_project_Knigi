@@ -54,4 +54,23 @@ class GenreServiceTest {
 
         assertThat(set).hasSize(1);
     }
+
+    @Test
+    void shouldDeleteGenre() {
+        doNothing().when(repo).deleteById(anyLong());
+
+        service.delete(1L);
+
+        verify(repo).deleteById(1L);
+    }
+
+    @Test
+    void shouldReturnEmptySetWhenNoGenresFound() {
+        when(repo.findAllById(Set.of(999L)))
+                .thenReturn(List.of());
+
+        var set = service.getEntities(Set.of(999L));
+
+        assertThat(set).isEmpty();
+    }
 }

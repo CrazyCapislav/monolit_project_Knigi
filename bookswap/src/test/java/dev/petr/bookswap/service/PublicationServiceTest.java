@@ -51,5 +51,45 @@ class PublicationServiceTest {
         var resp = service.decide(7L, 9L, true);
 
         assertThat(resp.status()).isEqualTo("APPROVED");
+        assertThat(pr.getDecidedAt()).isNotNull();
+    }
+
+    @Test
+    void shouldRejectPublicationRequest() {
+        PublicationRequest pr = PublicationRequest.builder()
+                .id(7L).publisher(publisher).requester(requester)
+                .title("B").author("A")
+                .status(PublicationStatus.SUBMITTED)
+                .createdAt(OffsetDateTime.now()).build();
+
+        when(repo.findById(7L)).thenReturn(Optional.of(pr));
+
+        var resp = service.decide(7L, 9L, false);
+
+        assertThat(resp.status()).isEqualTo("REJECTED");
+        assertThat(pr.getDecidedAt()).isNotNull();
+    }
+
+    @Test
+    void shouldThrowWhenPublicationRequestNotFound() {
+        when(repo.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.decide(999L, 9L, true))
+                .hasMessageContaining("Request not found");
+    }
+
+    @Test
+    void shouldThrowWhenNotPublisher() {
+        PublicationRequest pr = PublicationRequest.builder()
+                .id(7L).publisher(publisher).requester(requester)
+                .title("B").author("A")
+                .status(PublicationStatus.SUBMITTED)
+                .createdAt(OffsetDateTime.now()).build();
+
+        when(repo.findById(7L)).thenReturn(Optional.of(pr));
+
+        assertThatThrownBy(() -> service.decide(7L, 999L, true))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Not allowed");
     }
 }

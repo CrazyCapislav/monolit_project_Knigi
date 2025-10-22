@@ -65,4 +65,66 @@ class BookServiceTest {
         verify(bookRepo).findAll(cap.capture());
         assertThat(cap.getValue().getPageSize()).isEqualTo(50);
     }
+
+    @Test
+    void shouldGetBookEntity() {
+        Book book = Book.builder()
+                .id(1L)
+                .title("Test Book")
+                .author("Author")
+                .status(BookStatus.AVAILABLE)
+                .condition(BookCondition.GOOD)
+                .createdAt(OffsetDateTime.now())
+                .build();
+
+        when(bookRepo.findById(1L)).thenReturn(Optional.of(book));
+
+        Book result = service.getEntity(1L);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getTitle()).isEqualTo("Test Book");
+    }
+
+    @Test
+    void shouldThrowWhenBookNotFound() {
+        when(bookRepo.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getEntity(999L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Book not found");
+    }
+
+    @Test
+    void shouldReturnFeed() {
+        Book book1 = Book.builder()
+                .id(10L)
+                .title("Book1")
+                .author("Author1")
+                .status(BookStatus.AVAILABLE)
+                .condition(BookCondition.GOOD)
+                .createdAt(OffsetDateTime.now())
+                .owner(User.builder().id(1L).build())
+                .genres(Set.of())
+                .build();
+
+        when(bookRepo.findTop50ByIdLessThanFetchGenres(anyLong(), any(Pageable.class)))
+                .thenReturn(List.of(book1));
+
+        var feed = service.feed(100L, 20);
+
+        assertThat(feed).hasSize(1);
+        assertThat(feed.get(0).id()).isEqualTo(10L);
+    }
+
+    @Test
+    void shouldLimitFeedSizeTo50() {
+        when(bookRepo.findTop50ByIdLessThanFetchGenres(anyLong(), any(Pageable.class)))
+                .thenReturn(List.of());
+
+        service.feed(null, 200);
+
+        ArgumentCaptor<Pageable> cap = ArgumentCaptor.forClass(Pageable.class);
+        verify(bookRepo).findTop50ByIdLessThanFetchGenres(anyLong(), cap.capture());
+        assertThat(cap.getValue().getPageSize()).isEqualTo(50);
+    }
 }
