@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>dev.petr.bookswap</groupId>
 	<artifactId>bookswap</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>BookSwap</name>
 	<description>Books exchange monolith</description>
 	<url/>
