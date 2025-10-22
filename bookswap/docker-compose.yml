@@ -28,6 +28,7 @@ services:
       DB_NAME: books
       DB_USER: books
       DB_PASSWORD: books
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:80
     ports:
       - "8080:8080"
 
