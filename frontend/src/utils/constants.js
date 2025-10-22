@@ -8,10 +8,9 @@ export const API_BASE_URL = process.env.REACT_APP_API_URL ||
 
 export const BOOK_CONDITIONS = {
   NEW: 'Новая',
-  EXCELLENT: 'Отличное',
   GOOD: 'Хорошее',
   FAIR: 'Удовлетворительное',
-  POOR: 'Плохое'
+  BAD: 'Плохое'
 };
 
 export const REQUEST_STATUSES = {
