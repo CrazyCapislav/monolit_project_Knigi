@@ -32,7 +32,7 @@ class ExchangeControllerMvcTest {
                         5L, 1L, 2L, 10L, null,
                         "ACCEPTED", OffsetDateTime.now(), OffsetDateTime.now()));
 
-        mvc.perform(post("/api/v1/exchanges/5/accept")
+        mvc.perform(put("/api/v1/exchanges/5/accept")
                         .header("X-User-Id", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"));

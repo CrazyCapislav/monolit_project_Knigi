@@ -44,7 +44,7 @@ public class PublicationController {
     }
 
     @Operation(summary = "Издатель одобряет заявку")
-    @PostMapping("/{id}/approve")
+    @PutMapping("/{id}/approve")
     public PublicationRequestResponse approve(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long publisherId
@@ -53,7 +53,7 @@ public class PublicationController {
     }
 
     @Operation(summary = "Издатель отклоняет заявку")
-    @PostMapping("/{id}/reject")
+    @PutMapping("/{id}/reject")
     public PublicationRequestResponse reject(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long publisherId

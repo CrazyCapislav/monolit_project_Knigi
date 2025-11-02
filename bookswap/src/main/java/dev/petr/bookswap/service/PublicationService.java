@@ -25,11 +25,11 @@ public class PublicationService {
 
     /**
      * Create a publication request to a publisher.
-     * 
+     *
      * @Transactional is used for:
      * 1. Loading and validating users (requester, publisher)
      * 2. Creating publication request
-     * 
+     * <p>
      * Ensures atomicity of request creation with validation
      * of related entities existence.
      */
@@ -38,54 +38,56 @@ public class PublicationService {
         User requester = userService.getEntity(requesterId);
         User publisher = userService.getEntity(req.publisherId());
 
-        PublicationRequest pr = PublicationRequest.builder().requester(requester).publisher(publisher).title(req.title()).author(req.author()).message(req.message()).status(PublicationStatus.SUBMITTED).createdAt(OffsetDateTime.now()).build();
+        PublicationRequest pr =
+                PublicationRequest.builder().requester(requester).publisher(publisher).title(req.title())
+                        .author(req.author()).message(req.message()).status(PublicationStatus.SUBMITTED)
+                        .createdAt(OffsetDateTime.now()).build();
 
         return toResponse(repo.save(pr));
     }
 
     /**
      * Publisher's decision on publication request (approve/reject).
-     * 
+     * <p>
      * ⚠️ CRITICAL TRANSACTION ⚠️
-     * 
+     *
+     * @param requestId   ID of the publication request
+     * @param publisherId ID of the publisher making decision
+     * @param approve     true to approve, false to reject
+     * @return updated request with new status and decision timestamp
      * @Transactional is necessary to ensure ACID properties:
-     * 
+     * <p>
      * ATOMICITY:
      * - Update request status (APPROVED or REJECTED)
      * - Set decision timestamp (decidedAt)
-     * 
+     * <p>
      * Both operations must execute ATOMICALLY.
-     * 
+     * <p>
      * Critical situation example WITHOUT transaction:
      * 1. Request status changed to APPROVED ✓
      * 2. ⚠️ FAILURE ⚠️ - database unavailable / application error
      * 3. Decision timestamp (decidedAt) NOT set ✗
-     * 
+     * <p>
      * RESULT: Data in inconsistent state!
      * - Request approved, but no timestamp
      * - Cannot determine when decision was made
      * - Business logic violated (audit trail required)
      * - Potential legal issues in disputes
-     * 
+     * <p>
      * With transaction: on any error, ALL changes are rolled back,
      * request remains in original state (SUBMITTED).
-     * 
+     * <p>
      * CONSISTENCY:
      * Ensures status and timestamp are always consistent:
      * - APPROVED/REJECTED -> decidedAt is set
      * - SUBMITTED -> decidedAt = null
-     * 
+     * <p>
      * ISOLATION:
      * Prevents race condition when two publishers simultaneously
      * try to decide on the same request.
-     * 
+     * <p>
      * DURABILITY:
      * After transaction commit, decision is irreversibly saved.
-     * 
-     * @param requestId ID of the publication request
-     * @param publisherId ID of the publisher making decision
-     * @param approve true to approve, false to reject
-     * @return updated request with new status and decision timestamp
      */
     @Transactional
     public PublicationRequestResponse decide(Long requestId, Long publisherId, boolean approve) {
@@ -99,11 +101,13 @@ public class PublicationService {
 
     @Transactional(readOnly = true)
     public Page<PublicationRequestResponse> page(int page, int size) {
-        Page<PublicationRequest> p = repo.findAll(PageRequest.of(page, Math.min(size, 50), Sort.by(Sort.Direction.DESC, "id")));
+        Page<PublicationRequest> p =
+                repo.findAll(PageRequest.of(page, Math.min(size, 50), Sort.by(Sort.Direction.DESC, "id")));
         return p.map(this::toResponse);
     }
 
     private PublicationRequestResponse toResponse(PublicationRequest p) {
-        return new PublicationRequestResponse(p.getId(), p.getRequester().getId(), p.getPublisher().getId(), p.getTitle(), p.getAuthor(), p.getMessage(), p.getStatus().name(), p.getCreatedAt(), p.getDecidedAt());
+        return new PublicationRequestResponse(p.getId(), p.getRequester().getId(), p.getPublisher().getId(),
+                p.getTitle(), p.getAuthor(), p.getMessage(), p.getStatus().name(), p.getCreatedAt(), p.getDecidedAt());
     }
 }

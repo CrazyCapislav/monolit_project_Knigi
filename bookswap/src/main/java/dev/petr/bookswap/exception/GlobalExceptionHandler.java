@@ -37,6 +37,14 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage(), req.getRequestURI());
     }
 
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            org.springframework.dao.DataIntegrityViolationException.class
+    })
+    public ResponseEntity<ApiError> handleBadData(Exception ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req.getRequestURI());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleOther(Exception ex, HttpServletRequest req) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), req.getRequestURI());
