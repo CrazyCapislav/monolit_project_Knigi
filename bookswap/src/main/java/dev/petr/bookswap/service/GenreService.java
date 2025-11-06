@@ -23,7 +23,7 @@ public class GenreService {
 
     /**
      * Create a new genre.
-     * 
+     *
      * @param req genre creation request with name
      * @return created genre response
      */
@@ -35,7 +35,7 @@ public class GenreService {
 
     /**
      * Get all genres sorted by name.
-     * 
+     *
      * @return list of all genres
      */
     @Transactional(readOnly = true)

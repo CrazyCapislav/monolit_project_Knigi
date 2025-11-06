@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class PublicationControllerMvcTest {
@@ -33,7 +34,7 @@ class PublicationControllerMvcTest {
                         "m", "APPROVED",
                         OffsetDateTime.now(), OffsetDateTime.now()));
 
-        mvc.perform(post("/api/v1/publications/3/approve")
+        mvc.perform(put("/api/v1/publications/3/approve")
                         .header("X-User-Id", "9"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));

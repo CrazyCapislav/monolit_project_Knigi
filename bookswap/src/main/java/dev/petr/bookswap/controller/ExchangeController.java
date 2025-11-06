@@ -45,7 +45,7 @@ public class ExchangeController {
     }
 
     @Operation(summary = "Владелец принимает обмен")
-    @PostMapping("/{id}/accept")
+    @PutMapping("/{id}/accept")
     public ExchangeRequestResponse accept(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long ownerId

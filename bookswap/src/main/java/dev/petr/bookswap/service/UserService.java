@@ -25,7 +25,7 @@ public class UserService {
     /**
      * Register a new user in the system.
      * Default role is USER.
-     * 
+     *
      * @param req user registration request
      * @return created user response
      */
@@ -38,7 +38,7 @@ public class UserService {
 
     /**
      * Find user by ID.
-     * 
+     *
      * @param id user ID
      * @return user response
      * @throws NotFoundException if user not found
