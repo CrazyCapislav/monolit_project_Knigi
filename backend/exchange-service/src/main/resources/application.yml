@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: exchange-service
+  config:
+    import: optional:configserver:http://localhost:8888
+
+server:
+  port: 8083
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${server.port}
+
+logging:
+  level:
+    root: INFO
+    dev.petr: DEBUG
+    dev.petr.exchange.client: DEBUG

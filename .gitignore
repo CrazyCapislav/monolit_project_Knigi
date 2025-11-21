@@ -1,0 +1,6 @@
+# IntelliJ IDEA
+.idea/
+
+backend/.idea/
+backend/target/
+backend/*/target/

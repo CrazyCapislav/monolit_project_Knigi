@@ -1,0 +1,19 @@
+server:
+  port: 8081
+
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bookswap_auth}
+    username: ${DB_USER:bookswap}
+    password: ${DB_PASSWORD:bookswap}
+  
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bookswap_auth}
+    user: ${DB_USER:bookswap}
+    password: ${DB_PASSWORD:bookswap}
+    locations: classpath:db/migration
+
+jwt:
+  secret: your-256-bit-secret-key-change-this-in-production-please-make-it-long
+  expiration: 86400000
