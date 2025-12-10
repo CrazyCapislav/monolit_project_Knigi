@@ -1,37 +1,43 @@
 package dev.petr.bookswap.integration;
 
-import dev.petr.bookswap.entity.*;
-import dev.petr.bookswap.repository.UserRepository;
-import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-
 import java.time.OffsetDateTime;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+import dev.petr.bookswap.entity.Role;
+import dev.petr.bookswap.entity.User;
+import dev.petr.bookswap.repository.UserRepository;
+
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-class BookApiIT {
+@SuppressWarnings("null")
+class BookApiIT extends AbstractIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired UserRepository userRepo;
 
     Long uid;
 
-    @BeforeEach void init() {
-        uid = userRepo.save(User.builder()
+    @BeforeEach
+    @SuppressWarnings("unused")
+    void setUp() {
+        User user = userRepo.save(User.builder()
                 .email("m@l").passwordHash("h").displayName("Mock User")
-                .role(Role.USER).createdAt(OffsetDateTime.now()).build()).getId();
+                .role(Role.USER).createdAt(OffsetDateTime.now()).build());
+        uid = user.getId();
     }
 
-    @Test void create_and_page() throws Exception {
+    @Test
+    void create_and_page() throws Exception {
         mvc.perform(post("/api/v1/books")
                         .header("X-User-Id", uid)
                         .contentType(MediaType.APPLICATION_JSON)

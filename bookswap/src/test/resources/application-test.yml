@@ -2,9 +2,13 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
+  # Используем существующий контейнер из docker-compose, если он запущен
+  # Или testcontainers создаст свой контейнер
   datasource:
-    url: jdbc:tc:postgresql:16:///books
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/books}
+    username: ${TEST_DB_USER:books}
+    password: ${TEST_DB_PASSWORD:books}
+
   jpa:
     hibernate:
       ddl-auto: validate
