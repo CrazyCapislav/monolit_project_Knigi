@@ -1,28 +1,62 @@
 package dev.petr.bookswap.integration;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
- * Базовый класс для интеграционных тестов.
+ * Base class for integration tests.
  * 
- * Использует существующий контейнер PostgreSQL из docker-compose.
- * Перед запуском тестов убедитесь, что docker-compose запущен:
+ * Uses existing PostgreSQL container from docker-compose.
+ * Before running tests, ensure docker-compose is running:
  *   docker-compose up -d db
  * 
- * Настройки подключения к БД берутся из application-test.yml:
- *   spring.datasource.url=jdbc:postgresql://localhost:5432/books
- *   spring.datasource.username=books
- *   spring.datasource.password=books
+ * Database connection settings are taken from application-test.yml.
  * 
- * Это решение используется из-за проблем с подключением testcontainers к Docker на Windows.
- * Для изолированных тестов рекомендуется настроить testcontainers и использовать
- * контейнеры, создаваемые автоматически.
+ * Database is automatically cleaned before and after each test.
  */
 @SpringBootTest
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
-    // Используем существующий контейнер из docker-compose
-    // Настройки подключения берутся из application-test.yml
+    
+    @PersistenceContext
+    private EntityManager entityManager;
+    
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    
+    @BeforeEach
+    void cleanDatabaseBefore() {
+        cleanDatabase();
+    }
+    
+    @AfterEach
+    void cleanDatabaseAfter() {
+        cleanDatabase();
+    }
+    
+    /**
+     * Cleans database by truncating all tables.
+     * Uses TransactionTemplate for explicit transaction management.
+     */
+    private void cleanDatabase() {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(@SuppressWarnings("null") TransactionStatus status) {
+                entityManager.createNativeQuery("TRUNCATE TABLE book_rating, exchange_request, publication_request, book_genre, book, genre, users RESTART IDENTITY CASCADE").executeUpdate();
+                entityManager.clear();
+            }
+        });
+    }
 }
 
