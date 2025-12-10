@@ -1,0 +1,148 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.5'
+	id 'io.spring.dependency-management' version '1.1.6'
+	id 'jacoco'
+}
+
+group = 'dev.petr.bookswap'
+version = '1.0.0'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+	testCompileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Spring Boot Starters
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	
+	// Flyway
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	
+	// PostgreSQL
+	runtimeOnly 'org.postgresql:postgresql'
+	
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	
+	// Swagger/OpenAPI
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
+	
+	// Test dependencies
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	// Testcontainers - explicit latest version for better compatibility with Docker Desktop 4.54.0
+	testImplementation 'org.testcontainers:testcontainers:1.21.3'
+	testImplementation 'org.testcontainers:postgresql:1.21.3'
+	testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
+	
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+	// Генерировать отчет JaCoCo даже при падении тестов
+	finalizedBy jacocoTestReport
+	// Всегда сохранять данные JaCoCo даже при ошибках
+	testLogging {
+		events "passed", "skipped", "failed"
+		exceptionFormat "full"
+		showStandardStreams = true
+	}
+	// Убедиться, что тестовые классы компилируются перед запуском
+	dependsOn compileTestJava
+	// Настройки для правильной работы с путями
+	systemProperty 'file.encoding', 'UTF-8'
+	systemProperty 'user.language', 'en'
+	systemProperty 'user.country', 'US'
+	// Docker connection settings for testcontainers
+	// Testcontainers will auto-detect Docker connection
+	// For Windows Docker Desktop, it should use named pipes by default
+	// If you get BadRequestException, try enabling TCP in Docker Desktop and uncomment:
+	// environment 'DOCKER_HOST', 'tcp://localhost:2375'
+	// systemProperty 'docker.client.strategy', 'org.testcontainers.dockerclient.EnvironmentAndSystemPropertyClientProviderStrategy'
+}
+
+jacoco {
+	toolVersion = '0.8.13'
+}
+
+jacocoTestReport {
+	// Отчет генерируется всегда, даже если тесты упали
+	mustRunAfter test
+	executionData.from = fileTree(layout.buildDirectory.dir("jacoco")).include("**/*.exec")
+	reports {
+		xml.required = true
+		html.required = true
+		csv.required = true
+	}
+	// Генерировать отчет всегда (даже при ошибках тестов или отсутствии данных)
+	onlyIf { true }
+	// Не прерывать сборку при ошибках генерации отчета
+	doLast {
+		if (!executionData.files.isEmpty()) {
+			println "JaCoCo отчет сгенерирован: ${reports.html.outputLocation.get().asFile}"
+		} else {
+			println "Предупреждение: Нет данных JaCoCo для генерации отчета"
+		}
+	}
+}
+
+jacocoTestCoverageVerification {
+	dependsOn jacocoTestReport
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.70
+			}
+		}
+	}
+}
+
+// Проверка покрытия кода выполняется только при полной сборке с тестами
+// Для сборки без тестов используйте: gradlew build -x test -x check
+check {
+	dependsOn jacocoTestCoverageVerification
+}
+
+tasks.named('bootJar') {
+	layered {
+		enabled = true
+	}
+}
+
+// Настройки для IDE
+tasks.named('compileJava') {
+	options.encoding = 'UTF-8'
+}
+
+tasks.named('compileTestJava') {
+	options.encoding = 'UTF-8'
+}
+
+// Генерация метаданных для IDE
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+
