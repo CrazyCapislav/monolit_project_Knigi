@@ -1,13 +1,13 @@
 package dev.petr.bookswap.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-
-import java.util.List;
 
 /**
  * CORS configuration for frontend integration.
@@ -30,8 +30,10 @@ public class CorsConfig {
 
         config.setAllowCredentials(true);
 
+        // В Spring Boot 3.x используем addAllowedOriginPattern вместо addAllowedOrigin
+        // когда setAllowCredentials(true)
         for (String origin : allowedOrigins.split(",")) {
-            config.addAllowedOrigin(origin.trim());
+            config.addAllowedOriginPattern(origin.trim());
         }
 
         config.addAllowedHeader("*");
