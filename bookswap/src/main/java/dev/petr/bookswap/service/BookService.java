@@ -104,19 +104,26 @@ public class BookService {
 
     /**
      * Delete a book.
-     * Only the owner can delete their book.
+     * Only the owner or an admin can delete a book.
      *
      * @param bookId  ID of the book to delete
-     * @param ownerId ID of the requesting user (must be owner)
+     * @param userId  ID of the requesting user (must be owner or admin)
      * @throws NotFoundException     if book not found
-     * @throws IllegalStateException if user is not the owner
+     * @throws IllegalStateException if user is not the owner and not an admin
      */
     @Transactional
-    public void delete(Long bookId, Long ownerId) {
+    public void delete(Long bookId, Long userId) {
         Book book = getEntity(bookId);
-        if (!book.getOwner().getId().equals(ownerId)) {
-            throw new IllegalStateException("Only owner can delete the book");
+        User user = userService.getEntity(userId);
+        
+        // Allow deletion if user is the owner or an admin
+        boolean isOwner = book.getOwner().getId().equals(userId);
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+        
+        if (!isOwner && !isAdmin) {
+            throw new IllegalStateException("Only owner or admin can delete the book");
         }
+        
         bookRepo.delete(book);
     }
 

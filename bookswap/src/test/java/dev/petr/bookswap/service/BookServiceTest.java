@@ -127,4 +127,71 @@ class BookServiceTest {
         verify(bookRepo).findTop50ByIdLessThanFetchGenres(anyLong(), cap.capture());
         assertThat(cap.getValue().getPageSize()).isEqualTo(50);
     }
+
+    @Test
+    void shouldDeleteBookByOwner() {
+        User owner = User.builder().id(1L).role(Role.USER).build();
+        Book book = Book.builder()
+                .id(1L)
+                .title("Test Book")
+                .author("Author")
+                .status(BookStatus.AVAILABLE)
+                .condition(BookCondition.GOOD)
+                .createdAt(OffsetDateTime.now())
+                .owner(owner)
+                .build();
+
+        when(bookRepo.findById(1L)).thenReturn(Optional.of(book));
+        when(userService.getEntity(1L)).thenReturn(owner);
+        doNothing().when(bookRepo).delete(book);
+
+        service.delete(1L, 1L);
+
+        verify(bookRepo).delete(book);
+    }
+
+    @Test
+    void shouldDeleteBookByAdmin() {
+        User owner = User.builder().id(1L).role(Role.USER).build();
+        User admin = User.builder().id(2L).role(Role.ADMIN).build();
+        Book book = Book.builder()
+                .id(1L)
+                .title("Test Book")
+                .author("Author")
+                .status(BookStatus.AVAILABLE)
+                .condition(BookCondition.GOOD)
+                .createdAt(OffsetDateTime.now())
+                .owner(owner)
+                .build();
+
+        when(bookRepo.findById(1L)).thenReturn(Optional.of(book));
+        when(userService.getEntity(2L)).thenReturn(admin);
+        doNothing().when(bookRepo).delete(book);
+
+        service.delete(1L, 2L);
+
+        verify(bookRepo).delete(book);
+    }
+
+    @Test
+    void shouldThrowWhenDeletingBookByNonOwnerNonAdmin() {
+        User owner = User.builder().id(1L).role(Role.USER).build();
+        User otherUser = User.builder().id(3L).role(Role.USER).build();
+        Book book = Book.builder()
+                .id(1L)
+                .title("Test Book")
+                .author("Author")
+                .status(BookStatus.AVAILABLE)
+                .condition(BookCondition.GOOD)
+                .createdAt(OffsetDateTime.now())
+                .owner(owner)
+                .build();
+
+        when(bookRepo.findById(1L)).thenReturn(Optional.of(book));
+        when(userService.getEntity(3L)).thenReturn(otherUser);
+
+        assertThatThrownBy(() -> service.delete(1L, 3L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Only owner or admin can delete the book");
+    }
 }

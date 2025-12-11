@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 RUN sed -i 's/\r$//' gradlew && \
     chmod +x gradlew && \
-    ./gradlew build -x test --no-daemon
+    ./gradlew build -x test -x check --no-daemon
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app

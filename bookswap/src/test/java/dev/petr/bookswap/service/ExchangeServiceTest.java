@@ -55,6 +55,8 @@ class ExchangeServiceTest {
 
         assertThat(resp.status()).isEqualTo("ACCEPTED");
         assertThat(requested.getStatus()).isEqualTo(BookStatus.EXCHANGED);
+        // Check that ownership changed: requested book goes from owner to requester
+        assertThat(requested.getOwner().getId()).isEqualTo(1L); // requester id
     }
 
     @Test
@@ -109,5 +111,9 @@ class ExchangeServiceTest {
         assertThat(resp.status()).isEqualTo("ACCEPTED");
         assertThat(requested.getStatus()).isEqualTo(BookStatus.EXCHANGED);
         assertThat(offeredBook.getStatus()).isEqualTo(BookStatus.EXCHANGED);
+        // Check that ownership changed: requested book goes from owner to requester
+        assertThat(requested.getOwner().getId()).isEqualTo(1L); // requester id
+        // Check that ownership changed: offered book goes from requester to owner
+        assertThat(offeredBook.getOwner().getId()).isEqualTo(2L); // owner id
     }
 }

@@ -49,18 +49,8 @@ export const apiRequest = async (endpoint, options = {}) => {
   const userId = localStorage.getItem('userId');
   const url = `${API_BASE_URL}${endpoint}`;
 
-  let bodyToSend = options.body;
-  if (options.body && typeof options.body === 'string') {
-    try {
-      const parsed = JSON.parse(options.body);
-      bodyToSend = JSON.stringify(toSnakeCase(parsed));
-    } catch (e) {
-    }
-  }
-
   const config = {
     ...options,
-    body: bodyToSend,
     headers: {
       ...getHeaders(userId),
       ...options.headers
@@ -80,7 +70,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     }
 
     const data = await response.json();
-    return toCamelCase(data);
+    return data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;

@@ -67,7 +67,7 @@ public class BookController {
     }
 
     @Operation(summary = "Мои книги (книги текущего пользователя)")
-    @GetMapping("/mine")
+    @GetMapping("/mybooks")
     public List<BookResponse> getMyBooks(
             @Parameter(description = "ID текущего пользователя")
             @RequestHeader("X-User-Id") Long userId
@@ -80,10 +80,10 @@ public class BookController {
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID книги")
             @PathVariable Long id,
-            @Parameter(description = "ID владельца")
-            @RequestHeader("X-User-Id") Long ownerId
+            @Parameter(description = "ID пользователя (владелец или администратор)")
+            @RequestHeader("X-User-Id") Long userId
     ) {
-        service.delete(id, ownerId);
+        service.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
 }

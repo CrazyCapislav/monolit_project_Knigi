@@ -56,56 +56,23 @@ public class ExchangeService {
         return toResponse(repo.save(er));
     }
 
-    /**
-     * Accept an exchange request by the book owner.
-     * <p>
-     * ⚠️ CRITICAL TRANSACTION ⚠️
-     *
-     * @Transactional is necessary here to ensure ACID properties:
-     * <p>
-     * ATOMICITY:
-     * - Update exchange request status (ExchangeRequest.status = ACCEPTED)
-     * - Set update timestamp (ExchangeRequest.updatedAt)
-     * - Change requested book status (Book.status = EXCHANGED)
-     * - Change offered book status (Book.status = EXCHANGED), if present
-     * <p>
-     * All these operations must execute ATOMICALLY: all together or nothing.
-     * <p>
-     * Critical situation example WITHOUT transaction:
-     * 1. Exchange request status changed to ACCEPTED ✓
-     * 2. Timestamp updated ✓
-     * 3. First book status changed to EXCHANGED ✓
-     * 4. ⚠️ FAILURE ⚠️ - database unavailable / network error
-     * 5. Second book status NOT changed ✗
-     * <p>
-     * RESULT: Data in inconsistent state!
-     * - Exchange marked as accepted
-     * - But one book is still available for other exchanges
-     * - Possible **double exchange** of the same book
-     * - **Business logic violated**
-     * <p>
-     * With transaction: on any error, ALL changes are rolled back,
-     * system remains in consistent state.
-     * <p>
-     * CONSISTENCY:
-     * Ensures that books involved in exchange cannot be
-     * in multiple exchanges simultaneously (isolation level provides locking).
-     * <p>
-     * ISOLATION:
-     * Other transactions don't see intermediate states of changes.
-     * <p>
-     * DURABILITY:
-     * After transaction commit, all changes are persisted in DB.
-     */
     @Transactional
     public ExchangeRequestResponse accept(Long exchangeId, Long ownerId) {
         ExchangeRequest er = repo.findById(exchangeId).orElseThrow(() -> new NotFoundException("Exchange not found"));
         if (!er.getOwner().getId().equals(ownerId)) throw new IllegalStateException("Not an owner");
 
+        Book requestedBook = er.getBookRequested();
+        requestedBook.setOwner(er.getRequester());
+        requestedBook.setStatus(BookStatus.EXCHANGED);
+
+        if (er.getBookOffered() != null) {
+            Book offeredBook = er.getBookOffered();
+            offeredBook.setOwner(er.getOwner());
+            offeredBook.setStatus(BookStatus.EXCHANGED);
+        }
+
         er.setStatus(ExchangeStatus.ACCEPTED);
         er.setUpdatedAt(OffsetDateTime.now());
-        er.getBookRequested().setStatus(BookStatus.EXCHANGED);
-        if (er.getBookOffered() != null) er.getBookOffered().setStatus(BookStatus.EXCHANGED);
 
         return toResponse(er);
     }

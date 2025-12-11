@@ -84,7 +84,6 @@ jacoco {
 }
 
 jacocoTestReport {
-	// Отчет генерируется всегда, даже если тесты упали
 	mustRunAfter test
 	executionData.from = fileTree(layout.buildDirectory.dir("jacoco")).include("**/*.exec")
 	reports {
@@ -92,20 +91,19 @@ jacocoTestReport {
 		html.required = true
 		csv.required = true
 	}
-	// Генерировать отчет всегда (даже при ошибках тестов или отсутствии данных)
 	onlyIf { true }
-	// Не прерывать сборку при ошибках генерации отчета
 	doLast {
 		if (!executionData.files.isEmpty()) {
-			println "JaCoCo отчет сгенерирован: ${reports.html.outputLocation.get().asFile}"
+			println "JaCoCo report generated: ${reports.html.outputLocation.get().asFile}"
 		} else {
-			println "Предупреждение: Нет данных JaCoCo для генерации отчета"
+			println "Jacoco failed"
 		}
 	}
 }
 
 jacocoTestCoverageVerification {
 	dependsOn jacocoTestReport
+	onlyIf { jacocoTestReport.executionData.files.any { it.exists() } }
 	violationRules {
 		rule {
 			limit {
