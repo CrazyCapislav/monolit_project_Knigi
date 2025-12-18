@@ -31,7 +31,6 @@ public class ExchangeService {
     public ExchangeRequestResponse create(Long requesterId, ExchangeRequestCreateRequest request) {
         log.info("Creating exchange request from user {} for book {}", requesterId, request.bookRequestedId());
 
-        // Fetch requested book
         BookResponse requestedBook = fetchBook(request.bookRequestedId(), requesterId, "Requested book");
 
         if (requestedBook == null || "UNKNOWN".equals(requestedBook.status())) {
