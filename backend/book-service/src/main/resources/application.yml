@@ -26,6 +26,13 @@ eureka:
 jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-please-make-it-long}
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
 logging:
   level:
     root: INFO

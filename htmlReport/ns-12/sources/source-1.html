@@ -1,0 +1,155 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ExchangeController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">dev.petr.exchange.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: ExchangeController (dev.petr.exchange.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ExchangeController</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package dev.petr.exchange.controller;
+&nbsp;
+&nbsp;import dev.petr.exchange.dto.ExchangeRequestCreateRequest;
+&nbsp;import dev.petr.exchange.dto.ExchangeRequestResponse;
+&nbsp;import dev.petr.exchange.service.ExchangeService;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import jakarta.validation.constraints.Max;
+&nbsp;import jakarta.validation.constraints.Min;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v1/exchanges&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class ExchangeController {
+&nbsp;
+&nbsp;    private final ExchangeService exchangeService;
+&nbsp;
+&nbsp;    @PostMapping
+&nbsp;    @ResponseStatus(HttpStatus.CREATED)
+&nbsp;    public ExchangeRequestResponse create(
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long userId,
+&nbsp;            @Valid @RequestBody ExchangeRequestCreateRequest request
+&nbsp;    ) {
+<b class="nc">&nbsp;        return exchangeService.create(userId, request);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/{id}/accept&quot;)
+&nbsp;    public ExchangeRequestResponse accept(
+&nbsp;            @PathVariable Long id,
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long ownerId
+&nbsp;    ) {
+<b class="nc">&nbsp;        return exchangeService.accept(id, ownerId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping
+&nbsp;    public ResponseEntity&lt;List&lt;ExchangeRequestResponse&gt;&gt; page(
+&nbsp;            @RequestParam(defaultValue = &quot;0&quot;) @Min(0) int page,
+&nbsp;            @RequestParam(defaultValue = &quot;20&quot;) @Min(1) @Max(50) int size
+&nbsp;    ) {
+<b class="nc">&nbsp;        Page&lt;ExchangeRequestResponse&gt; p = exchangeService.page(page, size);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok()</b>
+<b class="nc">&nbsp;                .header(&quot;X-Total-Count&quot;, String.valueOf(p.getTotalElements()))</b>
+<b class="nc">&nbsp;                .body(p.getContent());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 18:10</div>
+</div>
+</body>
+</html>

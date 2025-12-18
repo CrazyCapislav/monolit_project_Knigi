@@ -1,0 +1,288 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PublicationService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">dev.petr.publication.service</a>
+</div>
+
+<h1>Coverage Summary for Class: PublicationService (dev.petr.publication.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PublicationService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66,7%
+  </span>
+  <span class="absValue">
+    (6/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87,5%
+  </span>
+  <span class="absValue">
+    (7/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    89,2%
+  </span>
+  <span class="absValue">
+    (74/83)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package dev.petr.publication.service;
+&nbsp;
+&nbsp;import dev.petr.publication.client.BookServiceClient;
+&nbsp;import dev.petr.publication.dto.*;
+&nbsp;import dev.petr.publication.entity.PublicationRequest;
+&nbsp;import dev.petr.publication.entity.PublicationStatus;
+&nbsp;import dev.petr.publication.repository.PublicationRequestRepository;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.PageRequest;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.time.OffsetDateTime;
+&nbsp;import java.util.Set;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class PublicationService {
+&nbsp;
+&nbsp;    private final PublicationRequestRepository publicationRepository;
+&nbsp;    private final BookServiceClient bookServiceClient;
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public PublicationRequestResponse requestBook(Long requesterId, PublicationRequestCreateRequest request) {
+<b class="fc">&nbsp;        log.info(&quot;User {} requesting book: {}&quot;, requesterId, request.title());</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest pubRequest = PublicationRequest.builder()</b>
+<b class="fc">&nbsp;                .requesterId(requesterId)</b>
+<b class="fc">&nbsp;                .title(request.title())</b>
+<b class="fc">&nbsp;                .author(request.author())</b>
+<b class="fc">&nbsp;                .isbn(request.isbn())</b>
+<b class="fc">&nbsp;                .publishedYear(request.publishedYear())</b>
+<b class="fc">&nbsp;                .description(request.description())</b>
+<b class="fc">&nbsp;                .status(PublicationStatus.PENDING)</b>
+<b class="fc">&nbsp;                .createdAt(OffsetDateTime.now())</b>
+<b class="fc">&nbsp;                .build();</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest saved = publicationRepository.save(pubRequest);</b>
+<b class="fc">&nbsp;        log.info(&quot;Publication request {} created successfully&quot;, saved.getId());</b>
+&nbsp;
+<b class="fc">&nbsp;        return toResponse(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public PublicationRequestResponse approve(Long requestId, Long publisherId) {
+<b class="fc">&nbsp;        log.info(&quot;Publisher {} approving publication request {}&quot;, publisherId, requestId);</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest request = publicationRepository.findById(requestId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Publication request not found&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (request.getStatus() != PublicationStatus.PENDING) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Only pending requests can be approved&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        request.setStatus(PublicationStatus.APPROVED);</b>
+<b class="fc">&nbsp;        request.setPublisherId(publisherId);</b>
+<b class="fc">&nbsp;        request.setUpdatedAt(OffsetDateTime.now());</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest updated = publicationRepository.save(request);</b>
+<b class="fc">&nbsp;        log.info(&quot;Publication request {} approved by publisher {}&quot;, requestId, publisherId);</b>
+&nbsp;
+<b class="fc">&nbsp;        return toResponse(updated);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public PublicationRequestResponse reject(Long requestId, Long publisherId, String reason) {
+<b class="fc">&nbsp;        log.info(&quot;Publisher {} rejecting publication request {}&quot;, publisherId, requestId);</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest request = publicationRepository.findById(requestId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Publication request not found&quot;));</b>
+&nbsp;
+<b class="pc">&nbsp;        if (request.getStatus() != PublicationStatus.PENDING) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Only pending requests can be rejected&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        request.setStatus(PublicationStatus.REJECTED);</b>
+<b class="fc">&nbsp;        request.setPublisherId(publisherId);</b>
+<b class="fc">&nbsp;        request.setRejectionReason(reason);</b>
+<b class="fc">&nbsp;        request.setUpdatedAt(OffsetDateTime.now());</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest updated = publicationRepository.save(request);</b>
+<b class="fc">&nbsp;        log.info(&quot;Publication request {} rejected by publisher {}&quot;, requestId, publisherId);</b>
+&nbsp;
+<b class="fc">&nbsp;        return toResponse(updated);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public PublicationRequestResponse publish(Long requestId, Long publisherId, Set&lt;Long&gt; genreIds) {
+<b class="fc">&nbsp;        log.info(&quot;Publisher {} publishing book for request {}&quot;, publisherId, requestId);</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest request = publicationRepository.findById(requestId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Publication request not found&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (request.getStatus() != PublicationStatus.APPROVED) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Only approved requests can be published&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (!publisherId.equals(request.getPublisherId())) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Only the assigned publisher can publish this book&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        CreateBookRequest bookRequest = new CreateBookRequest(</b>
+<b class="fc">&nbsp;                request.getTitle(),</b>
+<b class="fc">&nbsp;                request.getAuthor(),</b>
+<b class="fc">&nbsp;                request.getIsbn(),</b>
+<b class="fc">&nbsp;                request.getPublishedYear(),</b>
+&nbsp;                &quot;NEW&quot;,
+<b class="fc">&nbsp;                request.getDescription(),</b>
+&nbsp;                genreIds
+&nbsp;        );
+&nbsp;
+&nbsp;        BookResponse createdBook;
+&nbsp;        try {
+<b class="fc">&nbsp;            createdBook = bookServiceClient.createBook(bookRequest, publisherId);</b>
+<b class="fc">&nbsp;            log.info(&quot;Book created successfully with ID: {}&quot;, createdBook.id());</b>
+&nbsp;        } catch (Exception e) {
+<b class="fc">&nbsp;            log.error(&quot;Failed to create book in Book Service&quot;, e);</b>
+<b class="fc">&nbsp;            throw new RuntimeException(&quot;Failed to create book. Book service may be unavailable.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        request.setStatus(PublicationStatus.PUBLISHED);</b>
+<b class="fc">&nbsp;        request.setCreatedBookId(createdBook.id());</b>
+<b class="fc">&nbsp;        request.setUpdatedAt(OffsetDateTime.now());</b>
+&nbsp;
+<b class="fc">&nbsp;        PublicationRequest updated = publicationRepository.save(request);</b>
+<b class="fc">&nbsp;        log.info(&quot;Publication request {} completed. Book ID: {}&quot;, requestId, createdBook.id());</b>
+&nbsp;
+<b class="fc">&nbsp;        return toResponse(updated);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Page&lt;PublicationRequestResponse&gt; getAllRequests(int page, int size) {
+<b class="nc">&nbsp;        Pageable pageable = PageRequest.of(page, size);</b>
+<b class="nc">&nbsp;        return publicationRepository.findAll(pageable).map(this::toResponse);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Page&lt;PublicationRequestResponse&gt; getPendingRequests(int page, int size) {
+<b class="nc">&nbsp;        Pageable pageable = PageRequest.of(page, size);</b>
+<b class="nc">&nbsp;        return publicationRepository.findAllByStatus(PublicationStatus.PENDING, pageable)</b>
+<b class="nc">&nbsp;                .map(this::toResponse);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Page&lt;PublicationRequestResponse&gt; getMyRequests(Long requesterId, int page, int size) {
+<b class="nc">&nbsp;        Pageable pageable = PageRequest.of(page, size);</b>
+<b class="nc">&nbsp;        return publicationRepository.findAllByRequesterId(requesterId, pageable)</b>
+<b class="nc">&nbsp;                .map(this::toResponse);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private PublicationRequestResponse toResponse(PublicationRequest request) {
+<b class="fc">&nbsp;        return new PublicationRequestResponse(</b>
+<b class="fc">&nbsp;                request.getId(),</b>
+<b class="fc">&nbsp;                request.getRequesterId(),</b>
+<b class="fc">&nbsp;                request.getTitle(),</b>
+<b class="fc">&nbsp;                request.getAuthor(),</b>
+<b class="fc">&nbsp;                request.getIsbn(),</b>
+<b class="fc">&nbsp;                request.getPublishedYear(),</b>
+<b class="fc">&nbsp;                request.getDescription(),</b>
+<b class="fc">&nbsp;                request.getStatus().name(),</b>
+<b class="fc">&nbsp;                request.getPublisherId(),</b>
+<b class="fc">&nbsp;                request.getCreatedBookId(),</b>
+<b class="fc">&nbsp;                request.getRejectionReason(),</b>
+<b class="fc">&nbsp;                request.getCreatedAt(),</b>
+<b class="fc">&nbsp;                request.getUpdatedAt()</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 18:10</div>
+</div>
+</body>
+</html>
