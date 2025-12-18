@@ -1,0 +1,129 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BookRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">dev.petr.book.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: BookRepository (dev.petr.book.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">BookRepository$MockitoMock$jPv1YPb1</td>
+  </tr>
+  <tr>
+    <td class="name">BookRepository$MockitoMock$jPv1YPb1$auxiliary$FPVWqfBc</td>
+  </tr>
+  <tr>
+    <td class="name">BookRepository$MockitoMock$jPv1YPb1$auxiliary$lWuOlFAj</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package dev.petr.book.repository;
+&nbsp;
+&nbsp;import dev.petr.book.entity.Book;
+&nbsp;import dev.petr.book.entity.BookStatus;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.data.jpa.repository.Query;
+&nbsp;import org.springframework.data.repository.query.Param;
+&nbsp;import org.springframework.stereotype.Repository;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Repository
+&nbsp;public interface BookRepository extends JpaRepository&lt;Book, Long&gt; {
+&nbsp;
+&nbsp;    Page&lt;Book&gt; findAllByStatus(BookStatus status, Pageable pageable);
+&nbsp;
+&nbsp;    @Query(value = &quot;&quot;&quot;
+&nbsp;        SELECT DISTINCT b FROM Book b
+&nbsp;        LEFT JOIN FETCH b.genres
+&nbsp;        ORDER BY b.createdAt DESC, b.id DESC
+&nbsp;        &quot;&quot;&quot;,
+&nbsp;            countQuery = &quot;&quot;&quot;
+&nbsp;        SELECT COUNT(DISTINCT b) FROM Book b
+&nbsp;        &quot;&quot;&quot;)
+&nbsp;    Page&lt;Book&gt; findAllWithGenres(Pageable pageable);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;        SELECT DISTINCT b FROM Book b
+&nbsp;        LEFT JOIN FETCH b.genres
+&nbsp;        WHERE (:afterId IS NULL OR b.id &lt; :afterId)
+&nbsp;        ORDER BY b.id DESC
+&nbsp;        &quot;&quot;&quot;)
+&nbsp;    List&lt;Book&gt; findTopBooksWithGenres(@Param(&quot;afterId&quot;) Long afterId, Pageable pageable);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;        SELECT DISTINCT b FROM Book b
+&nbsp;        LEFT JOIN FETCH b.genres
+&nbsp;        WHERE b.ownerId = :ownerId
+&nbsp;        ORDER BY b.createdAt DESC
+&nbsp;        &quot;&quot;&quot;)
+&nbsp;    List&lt;Book&gt; findByOwnerIdWithGenres(@Param(&quot;ownerId&quot;) Long ownerId);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;        SELECT b FROM Book b
+&nbsp;        LEFT JOIN FETCH b.genres
+&nbsp;        WHERE b.id = :id
+&nbsp;        &quot;&quot;&quot;)
+&nbsp;    Optional&lt;Book&gt; findByIdWithGenres(@Param(&quot;id&quot;) Long id);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 18:10</div>
+</div>
+</body>
+</html>

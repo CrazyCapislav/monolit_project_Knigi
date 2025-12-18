@@ -1,0 +1,241 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PublicationController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">dev.petr.publication.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: PublicationController (dev.petr.publication.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PublicationController</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package dev.petr.publication.controller;
+&nbsp;
+&nbsp;import dev.petr.publication.dto.PublicationRequestCreateRequest;
+&nbsp;import dev.petr.publication.dto.PublicationRequestResponse;
+&nbsp;import dev.petr.publication.service.PublicationService;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import jakarta.validation.constraints.Max;
+&nbsp;import jakarta.validation.constraints.Min;
+&nbsp;import jakarta.validation.constraints.NotNull;
+&nbsp;import jakarta.validation.constraints.Size;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v1/publications&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class PublicationController {
+&nbsp;
+&nbsp;    private final PublicationService publicationService;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * User requests a book that doesn&#39;t exist
+&nbsp;     */
+&nbsp;    @PostMapping(&quot;/request&quot;)
+&nbsp;    @ResponseStatus(HttpStatus.CREATED)
+&nbsp;    public PublicationRequestResponse requestBook(
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long requesterId,
+&nbsp;            @Valid @RequestBody PublicationRequestCreateRequest request
+&nbsp;    ) {
+<b class="nc">&nbsp;        return publicationService.requestBook(requesterId, request);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Publisher approves the request
+&nbsp;     * Requires ROLE_PUBLISHER
+&nbsp;     */
+&nbsp;    @PutMapping(&quot;/{id}/approve&quot;)
+&nbsp;    public PublicationRequestResponse approve(
+&nbsp;            @PathVariable Long id,
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long publisherId
+&nbsp;    ) {
+<b class="nc">&nbsp;        return publicationService.approve(id, publisherId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Publisher rejects the request
+&nbsp;     * Requires ROLE_PUBLISHER
+&nbsp;     */
+&nbsp;    @PutMapping(&quot;/{id}/reject&quot;)
+&nbsp;    public PublicationRequestResponse reject(
+&nbsp;            @PathVariable Long id,
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long publisherId,
+&nbsp;            @RequestBody @Valid Map&lt;String, @Size(max = 500) String&gt; body
+&nbsp;    ) {
+<b class="nc">&nbsp;        String reason = body.getOrDefault(&quot;reason&quot;, &quot;Not specified&quot;);</b>
+<b class="nc">&nbsp;        return publicationService.reject(id, publisherId, reason);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Publisher creates the book (publishes it)
+&nbsp;     * Requires ROLE_PUBLISHER
+&nbsp;     */
+&nbsp;    @PostMapping(&quot;/{id}/publish&quot;)
+&nbsp;    public PublicationRequestResponse publish(
+&nbsp;            @PathVariable Long id,
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long publisherId,
+&nbsp;            @RequestBody @Valid Map&lt;String, @NotNull Set&lt;Long&gt;&gt; body
+&nbsp;    ) {
+<b class="nc">&nbsp;        Set&lt;Long&gt; genreIds = body.get(&quot;genre_ids&quot;);</b>
+<b class="nc">&nbsp;        if (genreIds == null || genreIds.isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;genre_ids is required&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return publicationService.publish(id, publisherId, genreIds);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get all publication requests (for publishers)
+&nbsp;     */
+&nbsp;    @GetMapping
+&nbsp;    public ResponseEntity&lt;List&lt;PublicationRequestResponse&gt;&gt; getAllRequests(
+&nbsp;            @RequestParam(defaultValue = &quot;0&quot;) @Min(0) int page,
+&nbsp;            @RequestParam(defaultValue = &quot;20&quot;) @Min(1) @Max(50) int size
+&nbsp;    ) {
+<b class="nc">&nbsp;        Page&lt;PublicationRequestResponse&gt; p = publicationService.getAllRequests(page, size);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok()</b>
+<b class="nc">&nbsp;                .header(&quot;X-Total-Count&quot;, String.valueOf(p.getTotalElements()))</b>
+<b class="nc">&nbsp;                .body(p.getContent());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pending requests (for publishers)
+&nbsp;     */
+&nbsp;    @GetMapping(&quot;/pending&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;PublicationRequestResponse&gt;&gt; getPendingRequests(
+&nbsp;            @RequestParam(defaultValue = &quot;0&quot;) @Min(0) int page,
+&nbsp;            @RequestParam(defaultValue = &quot;20&quot;) @Min(1) @Max(50) int size
+&nbsp;    ) {
+<b class="nc">&nbsp;        Page&lt;PublicationRequestResponse&gt; p = publicationService.getPendingRequests(page, size);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok()</b>
+<b class="nc">&nbsp;                .header(&quot;X-Total-Count&quot;, String.valueOf(p.getTotalElements()))</b>
+<b class="nc">&nbsp;                .body(p.getContent());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get my publication requests (for users)
+&nbsp;     */
+&nbsp;    @GetMapping(&quot;/my&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;PublicationRequestResponse&gt;&gt; getMyRequests(
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long requesterId,
+&nbsp;            @RequestParam(defaultValue = &quot;0&quot;) @Min(0) int page,
+&nbsp;            @RequestParam(defaultValue = &quot;20&quot;) @Min(1) @Max(50) int size
+&nbsp;    ) {
+<b class="nc">&nbsp;        Page&lt;PublicationRequestResponse&gt; p = publicationService.getMyRequests(requesterId, page, size);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok()</b>
+<b class="nc">&nbsp;                .header(&quot;X-Total-Count&quot;, String.valueOf(p.getTotalElements()))</b>
+<b class="nc">&nbsp;                .body(p.getContent());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 18:10</div>
+</div>
+</body>
+</html>

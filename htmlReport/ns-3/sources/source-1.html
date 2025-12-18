@@ -1,0 +1,236 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AuthController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">dev.petr.auth.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: AuthController (dev.petr.auth.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AuthController</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/37)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package dev.petr.auth.controller;
+&nbsp;
+&nbsp;import dev.petr.auth.dto.*;
+&nbsp;import dev.petr.auth.security.JwtUtil;
+&nbsp;import dev.petr.auth.service.AuthService;
+&nbsp;import dev.petr.auth.service.UserService;
+&nbsp;import io.jsonwebtoken.Claims;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import reactor.core.publisher.Mono;
+&nbsp;
+<b class="nc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v1/auth&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class AuthController {
+&nbsp;
+&nbsp;    private final AuthService authService;
+&nbsp;    private final UserService userService;
+&nbsp;    private final JwtUtil jwtUtil;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Public registration (role = USER by default)
+&nbsp;     */
+&nbsp;    @PostMapping(&quot;/register&quot;)
+&nbsp;    @ResponseStatus(HttpStatus.CREATED)
+&nbsp;    public Mono&lt;UserResponse&gt; register(@Valid @RequestBody RegisterRequest request) {
+<b class="nc">&nbsp;        log.info(&quot;Registration request for email: {}&quot;, request.email());</b>
+<b class="nc">&nbsp;        return userService.register(request);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Login and get JWT token
+&nbsp;     */
+&nbsp;    @PostMapping(&quot;/login&quot;)
+&nbsp;    public Mono&lt;LoginResponse&gt; login(@Valid @RequestBody LoginRequest request) {
+<b class="nc">&nbsp;        log.info(&quot;Login request for email: {}&quot;, request.email());</b>
+<b class="nc">&nbsp;        return authService.login(request);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get current user info from JWT token in Authorization header
+&nbsp;     * Gateway passes request without modification - we parse JWT ourselves
+&nbsp;     */
+&nbsp;    @GetMapping(&quot;/me&quot;)
+&nbsp;    public Mono&lt;UserResponse&gt; getCurrentUser(
+&nbsp;            @RequestHeader(value = &quot;Authorization&quot;, required = false) String authHeader
+&nbsp;    ) {
+<b class="nc">&nbsp;        log.info(&quot;Get current user from JWT token&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (authHeader == null || !authHeader.startsWith(&quot;Bearer &quot;)) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Missing or invalid Authorization header&quot;);</b>
+<b class="nc">&nbsp;            return Mono.error(new IllegalArgumentException(&quot;Authorization header required&quot;));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            String token = authHeader.substring(7);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (jwtUtil.isNotValid(token)) {</b>
+<b class="nc">&nbsp;                log.warn(&quot;Invalid JWT token&quot;);</b>
+<b class="nc">&nbsp;                log.warn(token, jwtUtil.getExpirationMillis().toString());</b>
+<b class="nc">&nbsp;                return Mono.error(new IllegalArgumentException(&quot;Invalid token&quot;));</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Claims claims = jwtUtil.extractClaims(token);</b>
+<b class="nc">&nbsp;            Long userId = Long.parseLong(claims.getSubject());</b>
+&nbsp;
+<b class="nc">&nbsp;            log.info(&quot;Extracted userId from JWT: {}&quot;, userId);</b>
+<b class="nc">&nbsp;            return userService.findById(userId);</b>
+&nbsp;        } catch (NumberFormatException e) {
+<b class="nc">&nbsp;            log.error(&quot;Invalid userId in token&quot;, e);</b>
+<b class="nc">&nbsp;            return Mono.error(new IllegalArgumentException(&quot;Invalid token format&quot;));</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Error parsing JWT token&quot;, e);</b>
+<b class="nc">&nbsp;            return Mono.error(new IllegalArgumentException(&quot;Invalid token&quot;));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create user with specific role (admin only)
+&nbsp;     * Gateway passes request without modification - we parse JWT ourselves
+&nbsp;     */
+&nbsp;    @PostMapping(&quot;/users&quot;)
+&nbsp;    @ResponseStatus(HttpStatus.CREATED)
+&nbsp;    public Mono&lt;UserResponse&gt; createUser(
+&nbsp;            @Valid @RequestBody CreateUserRequest request,
+&nbsp;            @RequestHeader(value = &quot;Authorization&quot;, required = false) String authHeader
+&nbsp;    ) {
+<b class="nc">&nbsp;        log.info(&quot;Create user request for email: {}&quot;, request.email());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (authHeader == null || !authHeader.startsWith(&quot;Bearer &quot;)) {</b>
+<b class="nc">&nbsp;            return Mono.error(new IllegalArgumentException(&quot;Authorization header required&quot;));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            String token = authHeader.substring(7);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (jwtUtil.isNotValid(token)) {</b>
+<b class="nc">&nbsp;                return Mono.error(new IllegalArgumentException(&quot;Invalid token&quot;));</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Claims claims = jwtUtil.extractClaims(token);</b>
+<b class="nc">&nbsp;            String role = claims.get(&quot;role&quot;, String.class);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (!&quot;ADMIN&quot;.equals(role)) {</b>
+<b class="nc">&nbsp;                log.warn(&quot;Non-admin user attempted to create user. Role: {}&quot;, role);</b>
+<b class="nc">&nbsp;                return Mono.error(new IllegalArgumentException(&quot;Only admins can create users&quot;));</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            log.info(&quot;Admin creating user with email: {} and role: {}&quot;, request.email(), request.role());</b>
+<b class="nc">&nbsp;            return userService.createUser(request);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Error validating admin token&quot;, e);</b>
+<b class="nc">&nbsp;            return Mono.error(new IllegalArgumentException(&quot;Invalid token&quot;));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 18:10</div>
+</div>
+</body>
+</html>

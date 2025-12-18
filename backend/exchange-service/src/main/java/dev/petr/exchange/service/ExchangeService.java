@@ -8,6 +8,7 @@ import dev.petr.exchange.dto.UpdateBookOwnerRequest;
 import dev.petr.exchange.entity.ExchangeRequest;
 import dev.petr.exchange.entity.ExchangeStatus;
 import dev.petr.exchange.repository.ExchangeRequestRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,14 +31,8 @@ public class ExchangeService {
     public ExchangeRequestResponse create(Long requesterId, ExchangeRequestCreateRequest request) {
         log.info("Creating exchange request from user {} for book {}", requesterId, request.bookRequestedId());
 
-        BookResponse requestedBook;
-        try {
-            requestedBook = bookServiceClient.getBook(request.bookRequestedId(), requesterId);
-            log.info("Successfully fetched book {} from Book Service", request.bookRequestedId());
-        } catch (Exception e) {
-            log.error("Failed to fetch book from Book Service (Circuit breaker may have opened)", e);
-            throw new IllegalArgumentException("Book service is temporarily unavailable");
-        }
+        // Fetch requested book
+        BookResponse requestedBook = fetchBook(request.bookRequestedId(), requesterId, "Requested book");
 
         if (requestedBook == null || "UNKNOWN".equals(requestedBook.status())) {
             throw new IllegalArgumentException("Requested book not found or unavailable");
@@ -52,7 +47,8 @@ public class ExchangeService {
         }
 
         if (request.bookOfferedId() != null) {
-            BookResponse offeredBook = bookServiceClient.getBook(request.bookOfferedId(), requesterId);
+            BookResponse offeredBook = fetchBook(request.bookOfferedId(), requesterId, "Offered book");
+
             if (!offeredBook.ownerId().equals(requesterId)) {
                 throw new IllegalArgumentException("You can only offer your own books");
             }
@@ -91,6 +87,47 @@ public class ExchangeService {
             throw new IllegalArgumentException("Exchange request is not in WAITING status");
         }
 
+        updateBookOwnership(exchange, ownerId);
+
+        exchange.setStatus(ExchangeStatus.ACCEPTED);
+        exchange.setUpdatedAt(OffsetDateTime.now());
+
+        ExchangeRequest updated = exchangeRepository.save(exchange);
+        log.info("Exchange request {} accepted and ownership swapped", exchangeId);
+
+        return toResponse(updated);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ExchangeRequestResponse> page(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return exchangeRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    /**
+     * Fetch book from Book Service.
+     * Lets FeignException (4xx errors) propagate to GlobalExceptionHandler.
+     * Only catches connectivity/timeout issues.
+     */
+    private BookResponse fetchBook(Long bookId, Long userId, String bookType) {
+        try {
+            BookResponse book = bookServiceClient.getBook(bookId, userId);
+            log.info("Successfully fetched {} with id {} from Book Service", bookType, bookId);
+            return book;
+        } catch (FeignException e) {
+            log.warn("Feign error fetching {}: {} - {}", bookType, e.status(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to fetch {} from Book Service", bookType, e);
+            throw new IllegalStateException("Book service is temporarily unavailable. Please try again later.");
+        }
+    }
+
+    /**
+     * Update book ownership during exchange.
+     * Lets FeignException propagate for proper error handling.
+     */
+    private void updateBookOwnership(ExchangeRequest exchange, Long ownerId) {
         try {
             log.info("Swapping ownership: book {} owner {} -> {}, book {} owner {} -> {}",
                     exchange.getBookRequestedId(), ownerId, exchange.getRequesterId(),
@@ -111,24 +148,13 @@ public class ExchangeService {
             }
 
             log.info("Book ownership successfully swapped");
+        } catch (FeignException e) {
+            log.error("Feign error updating book ownership: {} - {}", e.status(), e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Failed to update book ownership", e);
-            throw new RuntimeException("Failed to complete exchange. Book service may be unavailable.");
+            throw new IllegalStateException("Failed to complete exchange. Book service may be unavailable.");
         }
-
-        exchange.setStatus(ExchangeStatus.ACCEPTED);
-        exchange.setUpdatedAt(OffsetDateTime.now());
-
-        ExchangeRequest updated = exchangeRepository.save(exchange);
-        log.info("Exchange request {} accepted and ownership swapped", exchangeId);
-
-        return toResponse(updated);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ExchangeRequestResponse> page(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return exchangeRepository.findAll(pageable).map(this::toResponse);
     }
 
     private ExchangeRequestResponse toResponse(ExchangeRequest exchange) {

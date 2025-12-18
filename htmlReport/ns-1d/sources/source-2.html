@@ -1,0 +1,136 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PublicationRequest</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">dev.petr.publication.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: PublicationRequest (dev.petr.publication.entity)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">PublicationRequest</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package dev.petr.publication.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import jakarta.validation.constraints.NotNull;
+&nbsp;import lombok.*;
+&nbsp;
+&nbsp;import java.time.OffsetDateTime;
+&nbsp;
+&nbsp;/**
+&nbsp; * Publication Request Entity
+&nbsp; * Users request books that don&#39;t exist in the system
+&nbsp; * Publishers create these books
+&nbsp; */
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;publication_request&quot;)
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@NoArgsConstructor
+&nbsp;@AllArgsConstructor
+&nbsp;@Builder
+&nbsp;public class PublicationRequest {
+&nbsp;
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
+&nbsp;    private Long id;
+&nbsp;
+&nbsp;    @NotNull
+&nbsp;    @Column(name = &quot;requester_id&quot;, nullable = false)
+&nbsp;    private Long requesterId;
+&nbsp;
+&nbsp;    @NotNull
+&nbsp;    @Column(nullable = false, length = 500)
+&nbsp;    private String title;
+&nbsp;
+&nbsp;    @NotNull
+&nbsp;    @Column(nullable = false, length = 200)
+&nbsp;    private String author;
+&nbsp;
+&nbsp;    @Column(length = 20)
+&nbsp;    private String isbn;
+&nbsp;
+&nbsp;    @Column(name = &quot;published_year&quot;)
+&nbsp;    private Integer publishedYear;
+&nbsp;
+&nbsp;    @Column(columnDefinition = &quot;TEXT&quot;)
+&nbsp;    private String description;
+&nbsp;
+&nbsp;    @NotNull
+&nbsp;    @Enumerated(EnumType.STRING)
+&nbsp;    @Column(nullable = false, length = 20)
+&nbsp;    private PublicationStatus status;
+&nbsp;
+&nbsp;    @Column(name = &quot;publisher_id&quot;)
+&nbsp;    private Long publisherId;
+&nbsp;
+&nbsp;    @Column(name = &quot;created_book_id&quot;)
+&nbsp;    private Long createdBookId;
+&nbsp;
+&nbsp;    @Column(name = &quot;rejection_reason&quot;, length = 500)
+&nbsp;    private String rejectionReason;
+&nbsp;
+&nbsp;    @NotNull
+&nbsp;    @Column(name = &quot;created_at&quot;, nullable = false)
+&nbsp;    private OffsetDateTime createdAt;
+&nbsp;
+&nbsp;    @Column(name = &quot;updated_at&quot;)
+&nbsp;    private OffsetDateTime updatedAt;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 18:10</div>
+</div>
+</body>
+</html>
