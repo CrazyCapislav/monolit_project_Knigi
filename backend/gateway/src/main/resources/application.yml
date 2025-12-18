@@ -2,18 +2,23 @@ spring:
   application:
     name: gateway
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:${SPRING_CONFIG_IMPORT:http://localhost:8888}
+
+server:
+  port: 8080
 
 jwt:
-  secret: your-256-bit-secret-key-change-this-in-production-please-make-it-long
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-please-make-it-long}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
   instance:
-    prefer-ip-address: false
-    hostname: localhost
+    prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
 
 management:
@@ -24,3 +29,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+logging:
+  level:
+    root: INFO
+    dev.petr: DEBUG

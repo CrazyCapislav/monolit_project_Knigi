@@ -2,7 +2,15 @@ spring:
   application:
     name: exchange-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:${SPRING_CONFIG_IMPORT:http://localhost:8888}
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bookswap_exchanges}
+    username: ${DB_USER:bookswap}
+    password: ${DB_PASSWORD:bookswap}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
 
 server:
   port: 8083
@@ -10,11 +18,13 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
   instance:
-    prefer-ip-address: false
-    hostname: localhost
+    prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-please-make-it-long}
 
 logging:
   level:
