@@ -1,0 +1,68 @@
+# Git
+.git
+.gitignore
+.gitmodules
+
+# IDE
+.idea
+**/.idea
+*.iml
+.vscode
+**/.vscode
+
+# Build artifacts
+**/target/
+**/build/
+**/*.jar
+**/*.war
+**/*.ear
+
+# Logs
+*.log
+**/*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+**/README.md
+**/CHANGELOG.md
+**/LICENSE
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Maven
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+**/pom.xml.backup
+
+# Test reports
+**/surefire-reports/
+**/test-classes/
+**/jacoco.exec
+**/jacoco-report/target/
+
+# Node modules (если есть frontend)
+**/node_modules/
+**/npm-debug.log
+**/yarn-error.log
+
+# OS
+.DS_Store
+Thumbs.db
+**/.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+**/*.swp
+**/*.swo
+*~

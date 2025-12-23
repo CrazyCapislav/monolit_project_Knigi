@@ -1,19 +1,6 @@
-# OS files
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-
-# IDE
+# IntelliJ IDEA
 .idea/
-.vscode/
-*.iml
 
-# Logs
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-
+backend/.idea/
+backend/target/
+backend/*/target/
