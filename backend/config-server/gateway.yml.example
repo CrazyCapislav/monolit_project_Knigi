@@ -1,0 +1,79 @@
+# Пример конфигурации Gateway для Config Server
+# Этот файл должен быть размещен в git репозитории конфигураций: https://github.com/CrazyCapislav/configRepo
+# Имя файла: gateway.yml
+
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: book-service
+          uri: lb://book-service
+          predicates:
+            - Path=/api/v1/books/**, /api/v1/genres/**
+        - id: exchange-service
+          uri: lb://exchange-service
+          predicates:
+            - Path=/api/v1/exchanges/**
+        - id: publication-service
+          uri: lb://publication-service
+          predicates:
+            - Path=/api/v1/publications/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    urls:
+      - name: Auth Service
+        url: /v3/api-docs/auth
+      - name: Book Service
+        url: /v3/api-docs/book
+      - name: Exchange Service
+        url: /v3/api-docs/exchange
+      - name: Publication Service
+        url: /v3/api-docs/publication
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    dev.petr: DEBUG
+

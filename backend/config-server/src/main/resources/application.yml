@@ -1,0 +1,38 @@
+server:
+  port: ${SERVER_PORT:8888}
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/CrazyCapislav/configRepo
+          default-label: master
+          clone-on-start: true
+          force-pull: true
+          timeout: 10
+  profiles:
+    active: git
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
