@@ -1,10 +1,8 @@
 package dev.petr.auth.controller;
 
 import dev.petr.auth.dto.*;
-import dev.petr.auth.security.JwtUtil;
 import dev.petr.auth.service.AuthService;
 import dev.petr.auth.service.UserService;
-import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +18,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
-    private final JwtUtil jwtUtil;
 
     /**
      * Public registration (role = USER by default)
@@ -33,7 +30,7 @@ public class AuthController {
     }
 
     /**
-     * Login and get JWT token
+     * Login
      */
     @PostMapping("/login")
     public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -42,79 +39,46 @@ public class AuthController {
     }
 
     /**
-     * Get current user info from JWT token in Authorization header
-     * Gateway passes request without modification - we parse JWT ourselves
+     * Get current user info by user ID
      */
     @GetMapping("/me")
     public Mono<UserResponse> getCurrentUser(
-            @RequestHeader(value = "Authorization", required = false) String authHeader
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader
     ) {
-        log.info("Get current user from JWT token");
+        log.info("Get current user request");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("Missing or invalid Authorization header");
-            return Mono.error(new IllegalArgumentException("Authorization header required"));
+        if (userIdHeader == null) {
+            log.warn("Missing X-User-Id header");
+            return Mono.error(new IllegalArgumentException("X-User-Id header required"));
         }
 
         try {
-            String token = authHeader.substring(7);
-
-            if (jwtUtil.isNotValid(token)) {
-                log.warn("Invalid JWT token");
-                log.warn(token, jwtUtil.getExpirationMillis().toString());
-                return Mono.error(new IllegalArgumentException("Invalid token"));
-            }
-
-            Claims claims = jwtUtil.extractClaims(token);
-            Long userId = Long.parseLong(claims.getSubject());
-
-            log.info("Extracted userId from JWT: {}", userId);
+            Long userId = Long.parseLong(userIdHeader);
+            log.info("Getting user with ID: {}", userId);
             return userService.findById(userId);
         } catch (NumberFormatException e) {
-            log.error("Invalid userId in token", e);
-            return Mono.error(new IllegalArgumentException("Invalid token format"));
-        } catch (Exception e) {
-            log.error("Error parsing JWT token", e);
-            return Mono.error(new IllegalArgumentException("Invalid token"));
+            log.error("Invalid userId in header", e);
+            return Mono.error(new IllegalArgumentException("Invalid user ID format"));
         }
     }
 
     /**
      * Create user with specific role (admin only)
-     * Gateway passes request without modification - we parse JWT ourselves
      */
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<UserResponse> createUser(
             @Valid @RequestBody CreateUserRequest request,
-            @RequestHeader(value = "Authorization", required = false) String authHeader
+            @RequestHeader(value = "X-User-Role", required = false) String roleHeader
     ) {
         log.info("Create user request for email: {}", request.email());
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return Mono.error(new IllegalArgumentException("Authorization header required"));
+        if (roleHeader == null || !"ADMIN".equals(roleHeader)) {
+            log.warn("Non-admin user attempted to create user. Role: {}", roleHeader);
+            return Mono.error(new IllegalArgumentException("Only admins can create users"));
         }
 
-        try {
-            String token = authHeader.substring(7);
-
-            if (jwtUtil.isNotValid(token)) {
-                return Mono.error(new IllegalArgumentException("Invalid token"));
-            }
-
-            Claims claims = jwtUtil.extractClaims(token);
-            String role = claims.get("role", String.class);
-
-            if (!"ADMIN".equals(role)) {
-                log.warn("Non-admin user attempted to create user. Role: {}", role);
-                return Mono.error(new IllegalArgumentException("Only admins can create users"));
-            }
-
-            log.info("Admin creating user with email: {} and role: {}", request.email(), request.role());
-            return userService.createUser(request);
-        } catch (Exception e) {
-            log.error("Error validating admin token", e);
-            return Mono.error(new IllegalArgumentException("Invalid token"));
-        }
+        log.info("Admin creating user with email: {} and role: {}", request.email(), request.role());
+        return userService.createUser(request);
     }
 }

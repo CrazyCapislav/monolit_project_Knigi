@@ -4,7 +4,6 @@ import dev.petr.auth.dto.LoginRequest;
 import dev.petr.auth.dto.LoginResponse;
 import dev.petr.auth.entity.Role;
 import dev.petr.auth.entity.User;
-import dev.petr.auth.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +15,6 @@ import reactor.test.StepVerifier;
 
 import java.time.OffsetDateTime;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -25,9 +23,6 @@ class AuthServiceTest {
 
     @Mock
     private UserService userService;
-
-    @Mock
-    private JwtUtil jwtUtil;
 
     @InjectMocks
     private AuthService authService;
@@ -47,20 +42,18 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_ValidCredentials_ReturnsToken() {
+    void login_ValidCredentials_ReturnsUser() {
         LoginRequest request = new LoginRequest("test@test.com", "password123");
 
         when(userService.findByEmail(anyString())).thenReturn(Mono.just(testUser));
         when(userService.verifyPassword(anyString(), anyString())).thenReturn(true);
-        when(jwtUtil.generateToken(any(User.class))).thenReturn("jwt-token");
-        when(jwtUtil.getExpirationMillis()).thenReturn(3600000L);
 
         Mono<LoginResponse> result = authService.login(request);
 
         StepVerifier.create(result)
                 .expectNextMatches(response ->
-                        response.token().equals("jwt-token") &&
-                                response.user().email().equals("test@test.com")
+                        response.user().email().equals("test@test.com") &&
+                                response.user().role().equals("USER")
                 )
                 .verifyComplete();
     }

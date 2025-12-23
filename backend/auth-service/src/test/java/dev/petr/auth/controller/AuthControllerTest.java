@@ -1,12 +1,8 @@
 package dev.petr.auth.controller;
 
 import dev.petr.auth.dto.*;
-import dev.petr.auth.entity.Role;
-import dev.petr.auth.security.JwtUtil;
 import dev.petr.auth.service.AuthService;
 import dev.petr.auth.service.UserService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -15,12 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest(AuthController.class)
@@ -34,9 +25,6 @@ class AuthControllerTest {
 
     @MockBean
     private UserService userService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
 
     @Test
     void register_Success() {
@@ -72,7 +60,7 @@ class AuthControllerTest {
     void login_Success() {
         LoginRequest request = new LoginRequest("test@test.com", "password123");
         UserResponse userResponse = new UserResponse(1L, "test@test.com", "Test User", "USER");
-        LoginResponse response = new LoginResponse("jwt-token", 3600000L, userResponse);
+        LoginResponse response = new LoginResponse(userResponse);
 
         when(authService.login(any(LoginRequest.class))).thenReturn(Mono.just(response));
 
@@ -83,7 +71,6 @@ class AuthControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.token").isEqualTo("jwt-token")
                 .jsonPath("$.user.email").isEqualTo("test@test.com");
     }
 
@@ -103,20 +90,14 @@ class AuthControllerTest {
     }
 
     @Test
-    void getCurrentUser_ValidToken() {
-        Map<String, Object> claimsMap = new HashMap<>();
-        claimsMap.put("sub", "1");
-        Claims claims = Jwts.claims(claimsMap);
-        
+    void getCurrentUser_ValidHeader() {
         UserResponse response = new UserResponse(1L, "test@test.com", "Test User", "USER");
 
-        when(jwtUtil.isNotValid(anyString())).thenReturn(false);
-        when(jwtUtil.extractClaims(anyString())).thenReturn(claims);
         when(userService.findById(1L)).thenReturn(Mono.just(response));
 
         webTestClient.get()
                 .uri("/api/v1/auth/me")
-                .header("Authorization", "Bearer valid-token")
+                .header("X-User-Id", "1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -124,7 +105,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void getCurrentUser_MissingAuthHeader() {
+    void getCurrentUser_MissingHeader() {
         webTestClient.get()
                 .uri("/api/v1/auth/me")
                 .exchange()
@@ -132,21 +113,10 @@ class AuthControllerTest {
     }
 
     @Test
-    void getCurrentUser_InvalidAuthHeader() {
+    void getCurrentUser_InvalidUserId() {
         webTestClient.get()
                 .uri("/api/v1/auth/me")
-                .header("Authorization", "InvalidFormat")
-                .exchange()
-                .expectStatus().isBadRequest();
-    }
-
-    @Test
-    void getCurrentUser_InvalidToken() {
-        when(jwtUtil.isNotValid(anyString())).thenReturn(true);
-
-        webTestClient.get()
-                .uri("/api/v1/auth/me")
-                .header("Authorization", "Bearer invalid-token")
+                .header("X-User-Id", "invalid")
                 .exchange()
                 .expectStatus().isBadRequest();
     }
@@ -160,20 +130,13 @@ class AuthControllerTest {
                 "PUBLISHER"
         );
         
-        Map<String, Object> claimsMap = new HashMap<>();
-        claimsMap.put("sub", "1");
-        claimsMap.put("role", "ADMIN");
-        Claims claims = Jwts.claims(claimsMap);
-        
         UserResponse response = new UserResponse(2L, "newuser@test.com", "New User", "PUBLISHER");
 
-        when(jwtUtil.isNotValid(anyString())).thenReturn(false);
-        when(jwtUtil.extractClaims(anyString())).thenReturn(claims);
         when(userService.createUser(any(CreateUserRequest.class))).thenReturn(Mono.just(response));
 
         webTestClient.post()
                 .uri("/api/v1/auth/users")
-                .header("Authorization", "Bearer admin-token")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -191,18 +154,10 @@ class AuthControllerTest {
                 "password123",
                 "ADMIN"
         );
-        
-        Map<String, Object> claimsMap = new HashMap<>();
-        claimsMap.put("sub", "1");
-        claimsMap.put("role", "USER");
-        Claims claims = Jwts.claims(claimsMap);
-
-        when(jwtUtil.isNotValid(anyString())).thenReturn(false);
-        when(jwtUtil.extractClaims(anyString())).thenReturn(claims);
 
         webTestClient.post()
                 .uri("/api/v1/auth/users")
-                .header("Authorization", "Bearer user-token")
+                .header("X-User-Role", "USER")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -210,7 +165,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void createUser_MissingAuthHeader() {
+    void createUser_MissingHeader() {
         CreateUserRequest request = new CreateUserRequest(
                 "newuser@test.com",
                 "New User",

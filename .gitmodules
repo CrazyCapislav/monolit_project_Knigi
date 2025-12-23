@@ -1,0 +1,5 @@
+[submodule "configs-repo"]
+	path = backend/config-server/configs-repo
+	url = https://github.com/CrazyCapislav/configRepo
+
+
