@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface ExchangeRequestRepository extends JpaRepository<ExchangeRequest, Long> {
     
     Page<ExchangeRequest> findAllByStatus(ExchangeStatus status, Pageable pageable);
+
+    Page<ExchangeRequest> findByRequesterIdOrOwnerId(Long requesterId, Long ownerId, Pageable pageable);
 }

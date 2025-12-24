@@ -5,8 +5,11 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
@@ -14,9 +17,14 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI publicationServiceOpenAPI() {
         return new OpenAPI()
+                .servers(List.of(
+                        new Server()
+                                .url("http://localhost:8080")
+                                .description("API Gateway")
+                ))
                 .info(new Info()
                         .title("Publication Service API")
-                        .description("Publication request management service for BookSwap")
+                        .description("Book publication request management service for BookSwap")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("BookSwap Team")
