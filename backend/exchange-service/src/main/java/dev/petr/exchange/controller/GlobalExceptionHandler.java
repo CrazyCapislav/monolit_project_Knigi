@@ -1,5 +1,6 @@
 package dev.petr.exchange.controller;
 
+import dev.petr.exchange.exception.ServiceUnavailableException;
 import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -83,6 +84,11 @@ public class GlobalExceptionHandler {
                 "Internal server error",
                 request.getRequestURI()
         );
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleServiceUnavailable(ServiceUnavailableException e) {
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage(), e.toString());
     }
 
     private String extractFeignMessage(FeignException ex, String defaultMessage) {

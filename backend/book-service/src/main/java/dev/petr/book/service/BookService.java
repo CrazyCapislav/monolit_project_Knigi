@@ -131,6 +131,22 @@ public class BookService {
         }).subscribeOn(jdbcScheduler);
     }
 
+    @Transactional
+    public Mono<Void> deleteByAdmin(Long id) {
+        return Mono.fromCallable(() -> {
+                    return bookRepository.findByIdWithGenres(id).orElse(null);
+                })
+                .subscribeOn(jdbcScheduler)
+                .flatMap(book -> {
+                    if (book == null) {
+                        return Mono.error(new IllegalArgumentException("Book not found"));
+                    }
+                    return Mono.fromRunnable(() -> bookRepository.delete(book))
+                            .subscribeOn(jdbcScheduler)
+                            .then();
+                });
+    }
+
     private BookResponse toResponse(Book book) {
         return new BookResponse(
                 book.getId(),
