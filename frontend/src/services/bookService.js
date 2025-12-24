@@ -3,7 +3,7 @@ import { apiRequest } from './api';
 
 export const bookService = {
   async getMyBooks() {
-    return await apiRequest('/books/mine');
+    return await apiRequest('/books/mybooks');
   },
 
   async getBooks(page = 0, size = 20) {
