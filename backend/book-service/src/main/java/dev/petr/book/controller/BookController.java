@@ -57,7 +57,7 @@ public class BookController {
         return bookService.feed(afterId, limit);
     }
 
-    @GetMapping("/mine")
+    @GetMapping("/mybooks")
     public Flux<BookResponse> getMyBooks(@RequestHeader("X-User-Id") Long userId) {
         return bookService.findByOwnerId(userId);
     }
