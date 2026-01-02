@@ -9,7 +9,7 @@ spring:
       server:
         git:
           uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI:https://github.com/FreezinMoon/bookswap-config.git}
-          default-label: ${SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL:main}
+          default-label: ${SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL:lab4-config}
           clone-on-start: ${SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START:true}
           force-pull: true
           timeout: 5

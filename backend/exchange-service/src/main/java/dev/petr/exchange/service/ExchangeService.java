@@ -7,6 +7,8 @@ import dev.petr.exchange.dto.ExchangeRequestResponse;
 import dev.petr.exchange.dto.UpdateBookOwnerRequest;
 import dev.petr.exchange.entity.ExchangeRequest;
 import dev.petr.exchange.entity.ExchangeStatus;
+import dev.petr.exchange.event.ExchangeEvent;
+import dev.petr.exchange.event.ExchangeEventProducer;
 import dev.petr.exchange.exception.ServiceUnavailableException;
 import dev.petr.exchange.repository.ExchangeRequestRepository;
 import feign.FeignException;
@@ -29,6 +31,7 @@ public class ExchangeService {
 
     private final ExchangeRequestRepository exchangeRepository;
     private final BookServiceClient bookServiceClient;
+    private final ExchangeEventProducer eventProducer;
 
     @Transactional
     @CircuitBreaker(name = "bookService", fallbackMethod = "createFallback")
@@ -72,6 +75,16 @@ public class ExchangeService {
         ExchangeRequest saved = exchangeRepository.save(exchange);
         log.info("Exchange request {} created successfully", saved.getId());
 
+        ExchangeEvent event = ExchangeEvent.builder()
+                .exchangeId(saved.getId())
+                .requesterId(saved.getRequesterId())
+                .ownerId(saved.getOwnerId())
+                .bookOfferedId(saved.getBookOfferedId())
+                .bookRequestedId(saved.getBookRequestedId())
+                .status(saved.getStatus().name())
+                .build();
+        eventProducer.sendExchangeRequested(event);
+
         return toResponse(saved);
     }
 
@@ -103,6 +116,16 @@ public class ExchangeService {
 
         ExchangeRequest updated = exchangeRepository.save(exchange);
         log.info("Exchange request {} accepted and ownership swapped", exchangeId);
+
+        ExchangeEvent event = ExchangeEvent.builder()
+                .exchangeId(updated.getId())
+                .requesterId(updated.getRequesterId())
+                .ownerId(updated.getOwnerId())
+                .bookOfferedId(updated.getBookOfferedId())
+                .bookRequestedId(updated.getBookRequestedId())
+                .status(updated.getStatus().name())
+                .build();
+        eventProducer.sendExchangeAccepted(event);
 
         return toResponse(updated);
     }
@@ -140,6 +163,16 @@ public class ExchangeService {
 
         ExchangeRequest updated = exchangeRepository.save(exchange);
         log.info("Exchange request {} rejected", exchangeId);
+
+        ExchangeEvent event = ExchangeEvent.builder()
+                .exchangeId(updated.getId())
+                .requesterId(updated.getRequesterId())
+                .ownerId(updated.getOwnerId())
+                .bookOfferedId(updated.getBookOfferedId())
+                .bookRequestedId(updated.getBookRequestedId())
+                .status(updated.getStatus().name())
+                .build();
+        eventProducer.sendExchangeRejected(event);
 
         return toResponse(updated);
     }

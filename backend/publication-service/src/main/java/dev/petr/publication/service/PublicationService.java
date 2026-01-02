@@ -4,6 +4,8 @@ import dev.petr.publication.client.BookServiceClient;
 import dev.petr.publication.dto.*;
 import dev.petr.publication.entity.PublicationRequest;
 import dev.petr.publication.entity.PublicationStatus;
+import dev.petr.publication.event.PublicationEvent;
+import dev.petr.publication.event.PublicationEventProducer;
 import dev.petr.publication.repository.PublicationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class PublicationService {
 
     private final PublicationRequestRepository publicationRepository;
     private final BookServiceClient bookServiceClient;
+    private final PublicationEventProducer eventProducer;
 
     @Transactional
     public PublicationRequestResponse requestBook(Long requesterId, PublicationRequestCreateRequest request) {
@@ -63,6 +66,14 @@ public class PublicationService {
         PublicationRequest updated = publicationRepository.save(request);
         log.info("Publication request {} approved by publisher {}", requestId, publisherId);
 
+        PublicationEvent event = PublicationEvent.builder()
+                .publicationId(updated.getId())
+                .userId(updated.getRequesterId())
+                .bookId(null)
+                .status(updated.getStatus().name())
+                .build();
+        eventProducer.sendPublicationApproved(event);
+
         return toResponse(updated);
     }
 
@@ -84,6 +95,14 @@ public class PublicationService {
 
         PublicationRequest updated = publicationRepository.save(request);
         log.info("Publication request {} rejected by publisher {}", requestId, publisherId);
+
+        PublicationEvent event = PublicationEvent.builder()
+                .publicationId(updated.getId())
+                .userId(updated.getRequesterId())
+                .bookId(null)
+                .status(updated.getStatus().name())
+                .build();
+        eventProducer.sendPublicationRejected(event);
 
         return toResponse(updated);
     }
@@ -128,6 +147,14 @@ public class PublicationService {
 
         PublicationRequest updated = publicationRepository.save(request);
         log.info("Publication request {} completed. Book ID: {}", requestId, createdBook.id());
+
+        PublicationEvent event = PublicationEvent.builder()
+                .publicationId(updated.getId())
+                .userId(updated.getRequesterId())
+                .bookId(updated.getCreatedBookId())
+                .status(updated.getStatus().name())
+                .build();
+        eventProducer.sendPublicationApproved(event);
 
         return toResponse(updated);
     }

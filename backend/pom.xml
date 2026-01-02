@@ -32,6 +32,8 @@
         <module>book-service</module>
         <module>exchange-service</module>
         <module>publication-service</module>
+        <module>notification-service</module>
+        <module>file-service</module>
     </modules>
 
     <dependencyManagement>
