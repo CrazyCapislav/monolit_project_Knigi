@@ -4,6 +4,7 @@ import dev.petr.book.dto.BookCreateRequest;
 import dev.petr.book.dto.BookResponse;
 import dev.petr.book.dto.UpdateBookOwnerRequest;
 import dev.petr.book.service.BookService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -120,5 +121,31 @@ public class BookController {
         log.info("User {} transferring book {} to user {}",
                 currentOwnerId, id, request.newOwnerId());
         return bookService.updateOwner(id, currentOwnerId, request.newOwnerId());
+    }
+
+    /**
+     * Update book cover image
+     * USER can update only their own book covers
+     * ADMIN can update any book cover
+     */
+    @Operation(summary = "Update book cover image")
+    @PutMapping("/{id}/cover")
+    public Mono<BookResponse> updateCoverImage(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestParam("coverImageId") Long coverImageId) {
+
+        log.info("User {} (role: {}) updating cover image for book {}", userId, role, id);
+
+        if (role != null && role.equals("ROLE_ADMIN")) {
+            return bookService.updateCoverImageByAdmin(id, coverImageId);
+        }
+
+        if (role != null && role.equals("ROLE_USER")) {
+            return bookService.updateCoverImage(id, userId, coverImageId);
+        }
+
+        return Mono.error(new IllegalArgumentException("Access denied"));
     }
 }

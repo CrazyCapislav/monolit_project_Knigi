@@ -67,4 +67,7 @@ public class Book {
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
     private Set<Genre> genres;
+
+    @Column(name = "cover_image_id")
+    private Long coverImageId;
 }

@@ -2,6 +2,7 @@ package dev.petr.notification.config;
 
 import dev.petr.notification.application.dto.NotificationResponse;
 import dev.petr.notification.domain.event.ExchangeEvent;
+import dev.petr.notification.domain.event.FileEvent;
 import dev.petr.notification.domain.event.PublicationEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -87,5 +88,29 @@ public class KafkaConfig {
     @Bean
     public KafkaTemplate<String, NotificationResponse> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
+    }
+
+    @Bean
+    public ConsumerFactory<String, FileEvent> fileEventConsumerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "notification-service");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, FileEvent.class.getName());
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        return new DefaultKafkaConsumerFactory<>(config,
+                new StringDeserializer(),
+                new JsonDeserializer<>(FileEvent.class, false));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, FileEvent> fileEventKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, FileEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(fileEventConsumerFactory());
+        return factory;
     }
 }

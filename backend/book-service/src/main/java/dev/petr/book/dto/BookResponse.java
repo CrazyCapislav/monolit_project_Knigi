@@ -17,5 +17,7 @@ public record BookResponse(
         String condition,
         OffsetDateTime createdAt,
         Long ownerId,
-        Set<String> genres
+        Set<String> genres,
+        Long coverImageId,
+        String coverImageUrl
 ) {}

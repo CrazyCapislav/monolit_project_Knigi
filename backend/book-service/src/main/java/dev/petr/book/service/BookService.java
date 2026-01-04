@@ -147,6 +147,46 @@ public class BookService {
                 });
     }
 
+    @Transactional
+    public Mono<BookResponse> updateCoverImage(Long bookId, Long ownerId, Long coverImageId) {
+        log.info("User {} updating cover image for book {}", ownerId, bookId);
+
+        return Mono.fromCallable(() -> {
+            Book book = bookRepository.findByIdWithGenres(bookId)
+                    .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+
+            if (!book.getOwnerId().equals(ownerId)) {
+                throw new IllegalArgumentException("Only the book owner can update the cover");
+            }
+
+            book.setCoverImageId(coverImageId);
+            book.setUpdatedAt(OffsetDateTime.now());
+
+            Book updated = bookRepository.save(book);
+            log.info("Cover image updated for book {}", bookId);
+
+            return toResponse(updated);
+        }).subscribeOn(jdbcScheduler);
+    }
+
+    @Transactional
+    public Mono<BookResponse> updateCoverImageByAdmin(Long bookId, Long coverImageId) {
+        log.info("Admin updating cover image for book {}", bookId);
+
+        return Mono.fromCallable(() -> {
+            Book book = bookRepository.findByIdWithGenres(bookId)
+                    .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+
+            book.setCoverImageId(coverImageId);
+            book.setUpdatedAt(OffsetDateTime.now());
+
+            Book updated = bookRepository.save(book);
+            log.info("Cover image updated for book {} by admin", bookId);
+
+            return toResponse(updated);
+        }).subscribeOn(jdbcScheduler);
+    }
+
     private BookResponse toResponse(Book book) {
         return new BookResponse(
                 book.getId(),
@@ -162,7 +202,11 @@ public class BookService {
                         ? book.getGenres().stream()
                         .map(Genre::getName)
                         .collect(Collectors.toSet())
-                        : Collections.emptySet()
+                        : Collections.emptySet(),
+                book.getCoverImageId(),
+                book.getCoverImageId() != null
+                        ? "http://localhost:8080/api/v1/files/" + book.getCoverImageId() + "/download"
+                        : null
         );
     }
 }
