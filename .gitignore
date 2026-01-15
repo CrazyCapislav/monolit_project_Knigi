@@ -1,6 +1,1 @@
-# IntelliJ IDEA
-.idea/
-
-backend/.idea/
-backend/target/
-backend/*/target/
+# IntelliJ IDEA.idea/backend/.idea/backend/target/backend/*/target/.claude/.m2/.vscode/
