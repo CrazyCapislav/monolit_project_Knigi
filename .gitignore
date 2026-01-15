@@ -1,1 +1,17 @@
-# IntelliJ IDEA.idea/backend/.idea/backend/target/backend/*/target/.claude/.m2/.vscode/
+# IntelliJ IDEA
+.idea/
+backend/.idea/
+backend/**/.idea/
+
+# Build outputs
+backend/target/
+backend/*/target/
+backend/**/target/
+backend/**/target/**
+**/target/
+**/target/**
+
+# Local config
+.claude/
+.m2/
+.vscode/
