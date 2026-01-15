@@ -9,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
@@ -22,6 +24,34 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
+     * Handle IllegalStateException (usually from Circuit Breaker fallback methods)
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(
+            IllegalStateException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Service unavailable: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
+     * Handle network connection errors (when service is down)
+     */
+    @ExceptionHandler({ConnectException.class, SocketTimeoutException.class})
+    public ResponseEntity<Map<String, Object>> handleConnectionError(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        log.error("Connection error to external service: {}", ex.getMessage());
+        return buildErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "External service is temporarily unavailable. Please try again later.",
+                request.getRequestURI()
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -77,7 +107,25 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
-        log.error("Unexpected error", ex);
+        log.error("Unexpected error: {} - {}", ex.getClass().getName(), ex.getMessage(), ex);
+        
+        // Check if it's a connection-related error that should be SERVICE_UNAVAILABLE
+        String message = ex.getMessage();
+        if (message != null && (
+                message.contains("Connection refused") ||
+                message.contains("Connection timed out") ||
+                message.contains("I/O error") ||
+                message.contains("No route to host") ||
+                ex.getCause() instanceof ConnectException ||
+                ex.getCause() instanceof SocketTimeoutException
+        )) {
+            return buildErrorResponse(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "External service is temporarily unavailable. Please try again later.",
+                    request.getRequestURI()
+            );
+        }
+        
         return buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Internal server error",

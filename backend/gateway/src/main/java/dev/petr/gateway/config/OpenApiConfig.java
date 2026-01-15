@@ -18,21 +18,17 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI gatewayOpenAPI() {
+        String serverUrl = "http://localhost:" + serverPort;
         return new OpenAPI()
+                .servers(List.of(new Server().url(serverUrl).description("API Gateway")))
                 .info(new Info()
                         .title("BookSwap API Gateway")
                         .description("Unified API documentation for all BookSwap microservices")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("BookSwap Team")
-                                .email("support@bookswap.dev")))
-                .servers(List.of(
-                        new Server()
-                                .url("http://localhost:" + serverPort)
-                                .description("Gateway Server")
-                ));
+                                .email("support@bookswap.dev")));
     }
-
 }
 
 

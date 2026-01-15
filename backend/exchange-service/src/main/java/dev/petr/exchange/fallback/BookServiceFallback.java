@@ -31,6 +31,6 @@ public class BookServiceFallback implements BookServiceClient {
     @Override
     public BookResponse updateOwner(Long bookId, UpdateBookOwnerRequest request, Long userId) {
         log.warn("Circuit breaker activated! Cannot update book owner. Book Service unavailable.");
-        throw new RuntimeException("Book service is temporarily unavailable");
+        throw new IllegalStateException("Book service is temporarily unavailable. Cannot complete exchange.");
     }
 }

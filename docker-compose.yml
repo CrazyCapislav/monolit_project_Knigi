@@ -88,9 +88,9 @@ services:
       - "${GATEWAY_PORT:-8080}:${GATEWAY_PORT:-8080}"
     environment:
       SERVER_PORT: ${GATEWAY_PORT:-8080}
-      EUREKA_URI: http://eureka-server:8761/eureka/
+      SPRING_APPLICATION_NAME: gateway
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
-      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-please-make-it-long
+      EUREKA_URI: http://eureka-server:8761/eureka/
       CORS_ALLOWED_ORIGINS: http://localhost:3000
     depends_on:
       eureka-server:
@@ -113,7 +113,6 @@ services:
       - "${AUTH_SERVICE_PORT:-8081}:${AUTH_SERVICE_PORT:-8081}"
     environment:
       SERVER_PORT: ${AUTH_SERVICE_PORT:-8081}
-      GATEWAY_URL: http://localhost:${GATEWAY_PORT:-8080}
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
       DB_HOST: postgres
@@ -121,7 +120,6 @@ services:
       DB_NAME: bookswap_auth
       DB_USER: bookswap
       DB_PASSWORD: bookswap
-      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-please-make-it-long
     depends_on:
       postgres:
         condition: service_healthy
@@ -145,7 +143,6 @@ services:
       - "${BOOK_SERVICE_PORT:-8082}:${BOOK_SERVICE_PORT:-8082}"
     environment:
       SERVER_PORT: ${BOOK_SERVICE_PORT:-8082}
-      GATEWAY_URL: http://localhost:${GATEWAY_PORT:-8080}
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
       DB_HOST: postgres
@@ -153,7 +150,6 @@ services:
       DB_NAME: bookswap_books
       DB_USER: bookswap
       DB_PASSWORD: bookswap
-      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-please-make-it-long
     depends_on:
       postgres:
         condition: service_healthy
@@ -177,7 +173,6 @@ services:
       - "${EXCHANGE_SERVICE_PORT:-8083}:${EXCHANGE_SERVICE_PORT:-8083}"
     environment:
       SERVER_PORT: ${EXCHANGE_SERVICE_PORT:-8083}
-      GATEWAY_URL: http://localhost:${GATEWAY_PORT:-8080}
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
       DB_HOST: postgres
@@ -185,7 +180,6 @@ services:
       DB_NAME: bookswap_exchanges
       DB_USER: bookswap
       DB_PASSWORD: bookswap
-      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-please-make-it-long
     depends_on:
       postgres:
         condition: service_healthy
@@ -211,7 +205,6 @@ services:
       - "${PUBLICATION_SERVICE_PORT:-8084}:${PUBLICATION_SERVICE_PORT:-8084}"
     environment:
       SERVER_PORT: ${PUBLICATION_SERVICE_PORT:-8084}
-      GATEWAY_URL: http://localhost:${GATEWAY_PORT:-8080}
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
       DB_HOST: postgres
@@ -219,7 +212,6 @@ services:
       DB_NAME: bookswap_publications
       DB_USER: bookswap
       DB_PASSWORD: bookswap
-      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-please-make-it-long
     depends_on:
       postgres:
         condition: service_healthy
@@ -244,7 +236,6 @@ services:
         condition: service_healthy
     networks:
       - bookswap-network
-    restart: unless-stopped
 
 volumes:
   postgres-data:
