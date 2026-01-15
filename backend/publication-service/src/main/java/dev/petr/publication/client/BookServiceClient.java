@@ -1,5 +1,6 @@
 package dev.petr.publication.client;
 
+import dev.petr.publication.config.FeignConfig;
 import dev.petr.publication.dto.BookResponse;
 import dev.petr.publication.dto.CreateBookRequest;
 import dev.petr.publication.fallback.BookServiceFallback;
@@ -8,7 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
         name = "book-service",
-        fallback = BookServiceFallback.class
+        fallback = BookServiceFallback.class,
+        configuration = FeignConfig.class
 )
 public interface BookServiceClient {
 

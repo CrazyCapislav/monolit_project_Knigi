@@ -19,6 +19,15 @@ resilience4j:
         failureRateThreshold: 50
         slowCallRateThreshold: 100
         slowCallDurationThreshold: 2s
+        # Ignore FeignException with 4xx status codes (client errors)
+        ignoreExceptions:
+          - feign.FeignException$BadRequest
+          - feign.FeignException$Unauthorized
+          - feign.FeignException$Forbidden
+          - feign.FeignException$NotFound
+          - feign.FeignException$MethodNotAllowed
+          - feign.FeignException$Conflict
+          - feign.FeignException$UnprocessableEntity
     instances:
       bookService:
         baseConfig: default
