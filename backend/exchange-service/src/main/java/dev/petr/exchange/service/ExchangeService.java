@@ -8,7 +8,7 @@ import dev.petr.exchange.dto.UpdateBookOwnerRequest;
 import dev.petr.exchange.entity.ExchangeRequest;
 import dev.petr.exchange.entity.ExchangeStatus;
 import dev.petr.exchange.repository.ExchangeRequestRepository;
-import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,13 +28,14 @@ public class ExchangeService {
     private final BookServiceClient bookServiceClient;
 
     @Transactional
+    @CircuitBreaker(name = "bookService", fallbackMethod = "createFallback")
     public ExchangeRequestResponse create(Long requesterId, ExchangeRequestCreateRequest request) {
         log.info("Creating exchange request from user {} for book {}", requesterId, request.bookRequestedId());
 
         BookResponse requestedBook = fetchBook(request.bookRequestedId(), requesterId, "Requested book");
 
         if (requestedBook == null || "UNKNOWN".equals(requestedBook.status())) {
-            throw new IllegalArgumentException("Requested book not found or unavailable");
+            throw new IllegalStateException("Book service is temporarily unavailable. Please try again later.");
         }
 
         if (!"AVAILABLE".equals(requestedBook.status())) {
@@ -48,6 +49,9 @@ public class ExchangeService {
         if (request.bookOfferedId() != null) {
             BookResponse offeredBook = fetchBook(request.bookOfferedId(), requesterId, "Offered book");
 
+            if ("UNKNOWN".equals(offeredBook.status())) {
+                throw new IllegalStateException("Book service is temporarily unavailable. Please try again later.");
+            }
             if (!offeredBook.ownerId().equals(requesterId)) {
                 throw new IllegalArgumentException("You can only offer your own books");
             }
@@ -72,6 +76,7 @@ public class ExchangeService {
     }
 
     @Transactional
+    @CircuitBreaker(name = "bookService", fallbackMethod = "acceptFallback")
     public ExchangeRequestResponse accept(Long exchangeId, Long ownerId) {
         log.info("User {} accepting exchange request {}", ownerId, exchangeId);
 
@@ -105,55 +110,40 @@ public class ExchangeService {
 
     /**
      * Fetch book from Book Service.
-     * Lets FeignException (4xx errors) propagate to GlobalExceptionHandler.
-     * Only catches connectivity/timeout issues.
+     * Circuit Breaker will handle failures automatically.
      */
+    @CircuitBreaker(name = "bookService", fallbackMethod = "fetchBookFallback")
     private BookResponse fetchBook(Long bookId, Long userId, String bookType) {
-        try {
-            BookResponse book = bookServiceClient.getBook(bookId, userId);
-            log.info("Successfully fetched {} with id {} from Book Service", bookType, bookId);
-            return book;
-        } catch (FeignException e) {
-            log.warn("Feign error fetching {}: {} - {}", bookType, e.status(), e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to fetch {} from Book Service", bookType, e);
-            throw new IllegalStateException("Book service is temporarily unavailable. Please try again later.");
-        }
+        BookResponse book = bookServiceClient.getBook(bookId, userId);
+        log.info("Successfully fetched {} with id {} from Book Service", bookType, bookId);
+        return book;
     }
 
     /**
      * Update book ownership during exchange.
-     * Lets FeignException propagate for proper error handling.
+     * Circuit Breaker will handle failures automatically.
      */
+    @CircuitBreaker(name = "bookService", fallbackMethod = "updateBookOwnershipFallback")
     private void updateBookOwnership(ExchangeRequest exchange, Long ownerId) {
-        try {
-            log.info("Swapping ownership: book {} owner {} -> {}, book {} owner {} -> {}",
-                    exchange.getBookRequestedId(), ownerId, exchange.getRequesterId(),
-                    exchange.getBookOfferedId(), exchange.getRequesterId(), ownerId);
+        log.info("Swapping ownership: book {} owner {} -> {}, book {} owner {} -> {}",
+                exchange.getBookRequestedId(), ownerId, exchange.getRequesterId(),
+                exchange.getBookOfferedId(), exchange.getRequesterId(), ownerId);
 
+        bookServiceClient.updateOwner(
+                exchange.getBookRequestedId(),
+                new UpdateBookOwnerRequest(exchange.getRequesterId()),
+                ownerId
+        );
+
+        if (exchange.getBookOfferedId() != null) {
             bookServiceClient.updateOwner(
-                    exchange.getBookRequestedId(),
-                    new UpdateBookOwnerRequest(exchange.getRequesterId()),
-                    ownerId
+                    exchange.getBookOfferedId(),
+                    new UpdateBookOwnerRequest(ownerId),
+                    exchange.getRequesterId()
             );
-
-            if (exchange.getBookOfferedId() != null) {
-                bookServiceClient.updateOwner(
-                        exchange.getBookOfferedId(),
-                        new UpdateBookOwnerRequest(ownerId),
-                        exchange.getRequesterId()
-                );
-            }
-
-            log.info("Book ownership successfully swapped");
-        } catch (FeignException e) {
-            log.error("Feign error updating book ownership: {} - {}", e.status(), e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to update book ownership", e);
-            throw new IllegalStateException("Failed to complete exchange. Book service may be unavailable.");
         }
+
+        log.info("Book ownership successfully swapped");
     }
 
     private ExchangeRequestResponse toResponse(ExchangeRequest exchange) {
@@ -167,5 +157,28 @@ public class ExchangeService {
                 exchange.getCreatedAt(),
                 exchange.getUpdatedAt()
         );
+    }
+
+    // Fallback methods for Circuit Breaker
+
+    public ExchangeRequestResponse createFallback(Long requesterId, ExchangeRequestCreateRequest request, Exception e) {
+        log.error("Circuit breaker activated in create method. Book Service unavailable.", e);
+        throw new IllegalStateException("Book service is temporarily unavailable. Please try again later.");
+    }
+
+    public ExchangeRequestResponse acceptFallback(Long exchangeId, Long ownerId, Exception e) {
+        log.error("Circuit breaker activated in accept method. Book Service unavailable.", e);
+        throw new IllegalStateException("Book service is temporarily unavailable. Cannot complete exchange.");
+    }
+
+    private BookResponse fetchBookFallback(Long bookId, Long userId, String bookType, Exception e) {
+        log.error("Circuit breaker activated in fetchBook method. Book Service unavailable for {} {}. Error: {}", 
+                bookType, bookId, e.getMessage());
+        throw new IllegalStateException("Book service is temporarily unavailable. Please try again later.");
+    }
+
+    private void updateBookOwnershipFallback(ExchangeRequest exchange, Long ownerId, Exception e) {
+        log.error("Circuit breaker activated in updateBookOwnership method. Book Service unavailable.", e);
+        throw new IllegalStateException("Failed to complete exchange. Book service may be unavailable.");
     }
 }

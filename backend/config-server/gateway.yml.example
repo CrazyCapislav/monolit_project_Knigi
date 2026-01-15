@@ -25,6 +25,23 @@ spring:
           uri: lb://publication-service
           predicates:
             - Path=/api/v1/publications/**
+        # Маршруты для Swagger API docs
+        - id: auth-service-api-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs/auth
+        - id: book-service-api-docs
+          uri: lb://book-service
+          predicates:
+            - Path=/v3/api-docs/book
+        - id: exchange-service-api-docs
+          uri: lb://exchange-service
+          predicates:
+            - Path=/v3/api-docs/exchange
+        - id: publication-service-api-docs
+          uri: lb://publication-service
+          predicates:
+            - Path=/v3/api-docs/publication
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -54,6 +71,7 @@ springdoc:
         url: /v3/api-docs/exchange
       - name: Publication Service
         url: /v3/api-docs/publication
+    config-url: /v3/api-docs/swagger-config
 
 eureka:
   client:
