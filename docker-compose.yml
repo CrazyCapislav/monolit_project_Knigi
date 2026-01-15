@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: bookswap-postgres
+    container_name: bookswap-postgres-3
     environment:
       POSTGRES_USER: bookswap
       POSTGRES_PASSWORD: bookswap
@@ -23,7 +23,7 @@ services:
       context: .
       args:
         SERVICE_NAME: eureka-server
-    container_name: bookswap-eureka
+    container_name: bookswap-eureka-3
     ports:
       - "8761:8761"
     networks:
@@ -40,7 +40,7 @@ services:
       context: .
       args:
         SERVICE_NAME: config-server
-    container_name: bookswap-config
+    container_name: bookswap-config-3
     ports:
       - "8888:8888"
     environment:
@@ -66,7 +66,7 @@ services:
       context: .
       args:
         SERVICE_NAME: gateway
-    container_name: bookswap-gateway
+    container_name: bookswap-gateway-3
     ports:
       - "8080:8080"
     environment:
@@ -87,7 +87,7 @@ services:
       context: .
       args:
         SERVICE_NAME: auth-service
-    container_name: bookswap-auth
+    container_name: bookswap-auth-3
     ports:
       - "8081:8081"
     environment:
@@ -114,7 +114,7 @@ services:
       context: .
       args:
         SERVICE_NAME: book-service
-    container_name: bookswap-books
+    container_name: bookswap-books-3
     ports:
       - "8082:8082"
     environment:
@@ -141,7 +141,7 @@ services:
       context: .
       args:
         SERVICE_NAME: exchange-service
-    container_name: bookswap-exchange
+    container_name: bookswap-exchange-3
     ports:
       - "8083:8083"
     environment:
@@ -170,7 +170,7 @@ services:
       context: .
       args:
         SERVICE_NAME: publication-service
-    container_name: bookswap-publication
+    container_name: bookswap-publication-3
     ports:
       - "8084:8084"
     environment:
