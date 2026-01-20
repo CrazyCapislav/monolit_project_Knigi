@@ -34,7 +34,7 @@ class BookControllerTest {
     private BookService bookService;
 
     @Test
-    void create_Success() {
+    void create_Success_AsUser() {
         BookCreateRequest request = new BookCreateRequest(
                 "Test Book",
                 "Test Author",
@@ -71,6 +71,69 @@ class BookControllerTest {
                 .expectBody()
                 .jsonPath("$.title").isEqualTo("Test Book")
                 .jsonPath("$.author").isEqualTo("Test Author");
+    }
+
+    @Test
+    void create_Success_AsPublisher() {
+        BookCreateRequest request = new BookCreateRequest(
+                "Test Book",
+                "Test Author",
+                "978-1234567890",
+                2024,
+                "GOOD",
+                Set.of(1L)
+        );
+
+        BookResponse response = new BookResponse(
+                1L,
+                "Test Book",
+                "Test Author",
+                "978-1234567890",
+                2024,
+                "AVAILABLE",
+                "GOOD",
+                OffsetDateTime.now(),
+                3L,
+                Set.of("Fiction")
+        );
+
+        when(bookService.create(anyLong(), any(BookCreateRequest.class)))
+                .thenReturn(Mono.just(response));
+
+        webTestClient.post()
+                .uri("/api/v1/books")
+                .header("X-User-Id", "3")
+                .header("X-User-Role", "ROLE_PUBLISHER")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("Test Book")
+                .jsonPath("$.author").isEqualTo("Test Author");
+    }
+
+    @Test
+    void create_AsAdmin_Forbidden() {
+        BookCreateRequest request = new BookCreateRequest(
+                "Test Book",
+                "Test Author",
+                "978-1234567890",
+                2024,
+                "GOOD",
+                Set.of(1L)
+        );
+
+        webTestClient.post()
+                .uri("/api/v1/books")
+                .header("X-User-Id", "2")
+                .header("X-User-Role", "ROLE_ADMIN")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.message").isEqualTo("Only users and publishers can create books");
     }
 
     @Test
@@ -233,5 +296,94 @@ class BookControllerTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.owner_id").isEqualTo(2);
+    }
+
+    @Test
+    void updateOwner_AsAdmin_Forbidden() {
+        UpdateBookOwnerRequest request = new UpdateBookOwnerRequest(2L);
+
+        webTestClient.put()
+                .uri("/api/v1/books/1/owner")
+                .header("X-User-Id", "1")
+                .header("X-User-Role", "ROLE_ADMIN")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void deleteByAdmin_Success() {
+        when(bookService.deleteByAdmin(1L)).thenReturn(Mono.empty());
+
+        webTestClient.delete()
+                .uri("/api/v1/books/1")
+                .header("X-User-Id", "2")
+                .header("X-User-Role", "ROLE_ADMIN")
+                .exchange()
+                .expectStatus().isNoContent();
+    }
+
+    @Test
+    void updateBook_AsAdmin_Success() {
+        dev.petr.book.dto.BookUpdateRequest request = new dev.petr.book.dto.BookUpdateRequest(
+                "Updated Book",
+                "Updated Author",
+                "978-9876543210",
+                2025,
+                "EXCELLENT",
+                "AVAILABLE",
+                Set.of(1L)
+        );
+
+        BookResponse response = new BookResponse(
+                1L,
+                "Updated Book",
+                "Updated Author",
+                "978-9876543210",
+                2025,
+                "AVAILABLE",
+                "EXCELLENT",
+                OffsetDateTime.now(),
+                1L,
+                Set.of("Fiction")
+        );
+
+        when(bookService.updateBook(anyLong(), any(dev.petr.book.dto.BookUpdateRequest.class)))
+                .thenReturn(Mono.just(response));
+
+        webTestClient.put()
+                .uri("/api/v1/books/1")
+                .header("X-User-Id", "2")
+                .header("X-User-Role", "ROLE_ADMIN")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("Updated Book")
+                .jsonPath("$.author").isEqualTo("Updated Author");
+    }
+
+    @Test
+    void updateBook_AsUser_Forbidden() {
+        dev.petr.book.dto.BookUpdateRequest request = new dev.petr.book.dto.BookUpdateRequest(
+                "Updated Book",
+                "Updated Author",
+                "978-9876543210",
+                2025,
+                "EXCELLENT",
+                "AVAILABLE",
+                Set.of(1L)
+        );
+
+        webTestClient.put()
+                .uri("/api/v1/books/1")
+                .header("X-User-Id", "1")
+                .header("X-User-Role", "ROLE_USER")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 }

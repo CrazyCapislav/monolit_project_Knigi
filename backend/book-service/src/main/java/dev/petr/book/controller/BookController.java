@@ -4,6 +4,7 @@ import dev.petr.book.dto.BookCreateRequest;
 import dev.petr.book.dto.BookResponse;
 import dev.petr.book.dto.UpdateBookOwnerRequest;
 import dev.petr.book.service.BookService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -26,17 +27,18 @@ public class BookController {
 
     /**
      * Create a new book
-     * USER, ADMIN, PUBLISHER can create books
+     * Only USER and PUBLISHER can create books
+     * ADMIN cannot own books
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<BookResponse> create(
-            @RequestHeader("X-User-Id") Long ownerId,
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long ownerId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role,
             @Valid @RequestBody BookCreateRequest request
     ) {
-        if (role == null || (!role.equals("ROLE_USER") && !role.equals("ROLE_ADMIN") && !role.equals("ROLE_PUBLISHER"))) {
-            return Mono.error(new IllegalArgumentException("Access denied"));
+        if (role == null || (!role.equals("ROLE_USER") && !role.equals("ROLE_PUBLISHER"))) {
+            return Mono.error(new IllegalArgumentException("Only users and publishers can create books"));
         }
 
         log.info("User {} (role: {}) creating book: {}", ownerId, role, request.title());
@@ -46,7 +48,7 @@ public class BookController {
     @GetMapping("/{id}")
     public Mono<BookResponse> getById(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long userId
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId
     ) {
         log.debug("User {} viewing book {}", userId, id);
         return bookService.findById(id);
@@ -72,7 +74,9 @@ public class BookController {
     }
 
     @GetMapping("/mine")
-    public Flux<BookResponse> getMyBooks(@RequestHeader("X-User-Id") Long userId) {
+    public Flux<BookResponse> getMyBooks(
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId
+    ) {
         log.debug("User {} fetching own books", userId);
         return bookService.findByOwnerId(userId);
     }
@@ -86,8 +90,8 @@ public class BookController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> delete(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long ownerId,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long ownerId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         log.info("User {} (role: {}) deleting book {}", ownerId, role, id);
 
@@ -110,8 +114,8 @@ public class BookController {
     public Mono<BookResponse> updateOwner(
             @PathVariable Long id,
             @Valid @RequestBody UpdateBookOwnerRequest request,
-            @RequestHeader("X-User-Id") Long currentOwnerId,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long currentOwnerId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         if (role == null || !role.equals("ROLE_USER")) {
             return Mono.error(new IllegalArgumentException("Only users can transfer book ownership"));
@@ -121,4 +125,23 @@ public class BookController {
                 currentOwnerId, id, request.newOwnerId());
         return bookService.updateOwner(id, currentOwnerId, request.newOwnerId());
     }
+
+//    /**
+//     * Update book details
+//     * Only ADMIN can edit book details
+//     */
+//    @PutMapping("/{id}")
+//    public Mono<BookResponse> updateBook(
+//            @PathVariable Long id,
+//            @Valid @RequestBody BookUpdateRequest request,
+//            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long adminId,
+//            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
+//    ) {
+//        if (role == null || !role.equals("ROLE_ADMIN")) {
+//            return Mono.error(new IllegalArgumentException("Only admins can edit books"));
+//        }
+//
+//        log.info("Admin {} updating book {}", adminId, id);
+//        return bookService.updateBook(id, request);
+//    }
 }

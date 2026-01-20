@@ -2,6 +2,7 @@ package dev.petr.book.service;
 
 import dev.petr.book.dto.BookCreateRequest;
 import dev.petr.book.dto.BookResponse;
+import dev.petr.book.dto.BookUpdateRequest;
 import dev.petr.book.entity.Book;
 import dev.petr.book.entity.BookCondition;
 import dev.petr.book.entity.BookStatus;
@@ -146,6 +147,29 @@ public class BookService {
                             .then();
                 });
     }
+
+//    @Transactional
+//    public Mono<BookResponse> updateBook(Long bookId, BookUpdateRequest request) {
+//        log.info("Updating book {} with new details", bookId);
+//
+//        return genreService.getEntities(request.genreIds() != null ? request.genreIds() : Collections.emptySet())
+//                .flatMap(genres -> Mono.fromCallable(() -> {
+//                    Book book = bookRepository.findByIdWithGenres(bookId)
+//                            .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+//
+//                    book.setTitle(request.title());
+//                    book.setAuthor(request.author());
+//                    book.setIsbn(request.isbn());
+//                    book.setPublishedYear(request.publishedYear());
+//                    book.setCondition(BookCondition.valueOf(request.condition().toUpperCase()));
+//                    book.setStatus(BookStatus.valueOf(request.status().toUpperCase()));
+//                    book.setGenres(genres);
+//                    book.setUpdatedAt(OffsetDateTime.now());
+//
+//                    Book updated = bookRepository.save(book);
+//                    return toResponse(updated);
+//                }).subscribeOn(jdbcScheduler));
+//    }
 
     private BookResponse toResponse(Book book) {
         return new BookResponse(

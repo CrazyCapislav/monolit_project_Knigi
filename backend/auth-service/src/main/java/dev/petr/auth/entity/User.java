@@ -1,5 +1,6 @@
 package dev.petr.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -20,6 +21,7 @@ public class User {
     @Column("email")
     private String email;
     
+    @JsonIgnore
     @Column("password_hash")
     private String passwordHash;
     

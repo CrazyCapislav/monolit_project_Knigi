@@ -18,6 +18,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("null")
@@ -191,5 +194,42 @@ class AuthControllerTest {
                 .bodyValue(request)
                 .exchange()
                 .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void deleteUser_AsAdmin_Success() {
+        when(userService.deleteUser(1L)).thenReturn(Mono.empty());
+
+        webTestClient.delete()
+                .uri("/api/v1/auth/users/1")
+                .header("X-User-Id", "2")
+                .header("X-User-Role", "ROLE_ADMIN")
+                .exchange()
+                .expectStatus().isNoContent();
+
+        verify(userService).deleteUser(1L);
+    }
+
+    @Test
+    void deleteUser_AsUser_Forbidden() {
+        webTestClient.delete()
+                .uri("/api/v1/auth/users/1")
+                .header("X-User-Id", "1")
+                .header("X-User-Role", "ROLE_USER")
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        verify(userService, never()).deleteUser(anyLong());
+    }
+
+    @Test
+    void deleteUser_MissingRole_Forbidden() {
+        webTestClient.delete()
+                .uri("/api/v1/auth/users/1")
+                .header("X-User-Id", "2")
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        verify(userService, never()).deleteUser(anyLong());
     }
 }

@@ -112,7 +112,7 @@ class ExchangeServiceTest {
 
     @Test
     void create_OfferNotOwnBook_ThrowsException() {
-        
+
         ExchangeRequestCreateRequest request = new ExchangeRequestCreateRequest(1L, 2L);
         BookResponse notMyBook = new BookResponse(
                 2L, "Not Mine", "Author", null, null,
@@ -124,6 +124,19 @@ class ExchangeServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> exchangeService.create(1L, request));
+    }
+
+    @Test
+    void create_OfferSameBookAsRequested_ThrowsException() {
+
+        ExchangeRequestCreateRequest request = new ExchangeRequestCreateRequest(1L, 1L);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> exchangeService.create(1L, request));
+
+        assertEquals("Cannot offer the same book that you are requesting", exception.getMessage());
+        verify(bookServiceClient, never()).getBook(anyLong(), anyLong());
+        verify(exchangeRepository, never()).save(any());
     }
 
     @Test
@@ -172,10 +185,67 @@ class ExchangeServiceTest {
 
     @Test
     void accept_ExchangeNotFound_ThrowsException() {
-        
+
         when(exchangeRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class,
                 () -> exchangeService.accept(999L, 2L));
+    }
+
+    @Test
+    void reject_Success() {
+
+        when(exchangeRepository.findById(1L)).thenReturn(Optional.of(testExchange));
+        when(exchangeRepository.save(any(ExchangeRequest.class))).thenReturn(testExchange);
+
+
+        var response = exchangeService.reject(1L, 2L);
+
+
+        assertNotNull(response);
+        verify(exchangeRepository).save(any(ExchangeRequest.class));
+    }
+
+    @Test
+    void reject_NotOwner_ThrowsException() {
+
+        when(exchangeRepository.findById(1L)).thenReturn(Optional.of(testExchange));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> exchangeService.reject(1L, 999L));
+    }
+
+    @Test
+    void cancelByAdmin_Success() {
+
+        when(exchangeRepository.findById(1L)).thenReturn(Optional.of(testExchange));
+        testExchange.setStatus(ExchangeStatus.WAITING);
+        when(exchangeRepository.save(any(ExchangeRequest.class))).thenReturn(testExchange);
+
+
+        var response = exchangeService.cancelByAdmin(1L);
+
+
+        assertNotNull(response);
+        verify(exchangeRepository).save(any(ExchangeRequest.class));
+    }
+
+    @Test
+    void cancelByAdmin_NotWaitingStatus_ThrowsException() {
+
+        testExchange.setStatus(ExchangeStatus.ACCEPTED);
+        when(exchangeRepository.findById(1L)).thenReturn(Optional.of(testExchange));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> exchangeService.cancelByAdmin(1L));
+    }
+
+    @Test
+    void cancelByAdmin_ExchangeNotFound_ThrowsException() {
+
+        when(exchangeRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> exchangeService.cancelByAdmin(999L));
     }
 }

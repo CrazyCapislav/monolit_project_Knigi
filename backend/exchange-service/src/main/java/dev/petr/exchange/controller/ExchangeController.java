@@ -3,6 +3,7 @@ package dev.petr.exchange.controller;
 import dev.petr.exchange.dto.ExchangeRequestCreateRequest;
 import dev.petr.exchange.dto.ExchangeRequestResponse;
 import dev.petr.exchange.service.ExchangeService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -27,8 +28,8 @@ public class ExchangeController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ExchangeRequestResponse create(
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role,
             @Valid @RequestBody ExchangeRequestCreateRequest request
     ) {
         if (role == null || !role.equals("ROLE_USER")) {
@@ -43,8 +44,8 @@ public class ExchangeController {
     @PutMapping("/{id}/accept")
     public ExchangeRequestResponse accept(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long ownerId,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long ownerId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         if (role == null || !role.equals("ROLE_USER")) {
             throw new IllegalArgumentException("Only users can accept exchanges");
@@ -57,8 +58,8 @@ public class ExchangeController {
     @PutMapping("/{id}/reject")
     public ExchangeRequestResponse reject(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long ownerId,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long ownerId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         if (role == null || !role.equals("ROLE_USER")) {
             throw new IllegalArgumentException("Only users can reject exchanges");
@@ -73,8 +74,8 @@ public class ExchangeController {
     public ResponseEntity<List<ExchangeRequestResponse>> page(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         Page<ExchangeRequestResponse> p;
 
@@ -92,4 +93,22 @@ public class ExchangeController {
                 .header("X-Total-Count", String.valueOf(p.getTotalElements()))
                 .body(p.getContent());
     }
+
+//    /**
+//     * Cancel exchange request by admin
+//     * Only ADMIN can cancel any exchange request
+//     */
+//    @PutMapping("/{id}/cancel")
+//    public ExchangeRequestResponse cancel(
+//            @PathVariable Long id,
+//            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long adminId,
+//            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
+//    ) {
+//        if (role == null || !role.equals("ROLE_ADMIN")) {
+//            throw new IllegalArgumentException("Only admins can cancel exchange requests");
+//        }
+//
+//        log.info("Admin {} canceling exchange {}", adminId, id);
+//        return exchangeService.cancelByAdmin(id);
+//    }
 }

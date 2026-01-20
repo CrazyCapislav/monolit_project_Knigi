@@ -84,6 +84,12 @@ public class UserService {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
+//    public Mono<Void> deleteUser(Long id) {
+//        return userRepository.findById(id)
+//                .switchIfEmpty(Mono.error(new IllegalArgumentException("User not found")))
+//                .flatMap(user -> userRepository.delete(user));
+//    }
+
     private UserResponse toResponse(User user) {
         return new UserResponse(
                 user.getId(),

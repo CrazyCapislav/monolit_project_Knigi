@@ -3,6 +3,7 @@ package dev.petr.publication.controller;
 import dev.petr.publication.dto.PublicationRequestCreateRequest;
 import dev.petr.publication.dto.PublicationRequestResponse;
 import dev.petr.publication.service.PublicationService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -34,8 +35,8 @@ public class PublicationController {
     @PostMapping("/request")
     @ResponseStatus(HttpStatus.CREATED)
     public PublicationRequestResponse requestBook(
-            @RequestHeader("X-User-Id") Long requesterId,
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long requesterId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role,
             @Valid @RequestBody PublicationRequestCreateRequest request
     ) {
         if (role == null || !role.equals("ROLE_USER")) {
@@ -53,8 +54,8 @@ public class PublicationController {
     @PutMapping("/{id}/approve")
     public PublicationRequestResponse approve(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long publisherId,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long publisherId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         if (role == null || !role.equals("ROLE_PUBLISHER")) {
             throw new IllegalArgumentException("Only publishers can approve publication requests");
@@ -71,8 +72,8 @@ public class PublicationController {
     @PutMapping("/{id}/reject")
     public PublicationRequestResponse reject(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long publisherId,
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long publisherId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role,
             @RequestBody @Valid Map<String, @Size(max = 500) String> body
     ) {
         if (role == null || !role.equals("ROLE_PUBLISHER")) {
@@ -92,8 +93,8 @@ public class PublicationController {
     @PostMapping("/{id}/publish")
     public PublicationRequestResponse publish(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long publisherId,
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long publisherId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role,
             @RequestBody @Valid Map<String, @NotNull Set<Long>> body
     ) {
         if (role == null || !role.equals("ROLE_PUBLISHER")) {
@@ -117,7 +118,7 @@ public class PublicationController {
     public ResponseEntity<List<PublicationRequestResponse>> getAllRequests(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         if (role == null || (!role.equals("ROLE_ADMIN") && !role.equals("ROLE_PUBLISHER"))) {
             throw new IllegalArgumentException("Access denied");
@@ -137,7 +138,7 @@ public class PublicationController {
     public ResponseEntity<List<PublicationRequestResponse>> getPendingRequests(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         if (role == null || !role.equals("ROLE_PUBLISHER")) {
             throw new IllegalArgumentException("Only publishers can view pending requests");
@@ -155,8 +156,8 @@ public class PublicationController {
      */
     @GetMapping("/my")
     public ResponseEntity<List<PublicationRequestResponse>> getMyRequests(
-            @RequestHeader("X-User-Id") Long requesterId,
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long requesterId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size
     ) {

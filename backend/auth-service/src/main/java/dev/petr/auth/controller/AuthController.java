@@ -3,6 +3,7 @@ package dev.petr.auth.controller;
 import dev.petr.auth.dto.*;
 import dev.petr.auth.service.AuthService;
 import dev.petr.auth.service.UserService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,9 @@ public class AuthController {
      * Gateway validated JWT and passed X-User-Id
      */
     @GetMapping("/me")
-    public Mono<UserResponse> getCurrentUser(@RequestHeader("X-User-Id") Long userId) {
+    public Mono<UserResponse> getCurrentUser(
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId
+    ) {
         log.info("Get current user: {}", userId);
         return userService.findById(userId);
     }
@@ -56,8 +59,8 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<UserResponse> createUser(
             @Valid @RequestBody CreateUserRequest request,
-            @RequestHeader("X-User-Id") Long adminId,
-            @RequestHeader(value = "X-User-Role", required = false) String role
+            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long adminId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
     ) {
         if (role == null || !role.equals("ROLE_ADMIN")) {
             return Mono.error(new IllegalArgumentException("Only admins can create users"));
@@ -67,4 +70,23 @@ public class AuthController {
                 adminId, request.email(), request.role());
         return userService.createUser(request);
     }
+
+//    /**
+//     * Delete user
+//     * Only ADMIN role can delete users
+//     */
+//    @DeleteMapping("/users/{id}")
+//    @ResponseStatus(HttpStatus.NO_CONTENT)
+//    public Mono<Void> deleteUser(
+//            @PathVariable Long id,
+//            @Parameter(hidden = true) @RequestHeader("X-User-Id") Long adminId,
+//            @Parameter(hidden = true) @RequestHeader(value = "X-User-Role", required = false) String role
+//    ) {
+//        if (role == null || !role.equals("ROLE_ADMIN")) {
+//            return Mono.error(new IllegalArgumentException("Only admins can delete users"));
+//        }
+//
+//        log.info("Admin {} deleting user {}", adminId, id);
+//        return userService.deleteUser(id);
+//    }
 }

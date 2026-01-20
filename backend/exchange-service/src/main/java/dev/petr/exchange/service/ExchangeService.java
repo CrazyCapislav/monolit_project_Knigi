@@ -35,6 +35,11 @@ public class ExchangeService {
     public ExchangeRequestResponse create(Long requesterId, ExchangeRequestCreateRequest request) {
         log.info("Creating exchange request from user {} for book {}", requesterId, request.bookRequestedId());
 
+        // Early validation before calling Book Service
+        if (request.bookOfferedId() != null && request.bookOfferedId().equals(request.bookRequestedId())) {
+            throw new IllegalArgumentException("Cannot offer the same book that you are requesting");
+        }
+
         BookResponse requestedBook = fetchBook(request.bookRequestedId(), requesterId, "Requested book");
 
         if (requestedBook == null || "UNKNOWN".equals(requestedBook.status())) {
@@ -213,6 +218,26 @@ public class ExchangeService {
                 .findByRequesterIdOrOwnerId(userId, userId, pageable);
         return exchanges.map(this::toResponse);
     }
+
+//    @Transactional
+//    public ExchangeRequestResponse cancelByAdmin(Long exchangeId) {
+//        log.info("Admin canceling exchange request {}", exchangeId);
+//
+//        ExchangeRequest exchange = exchangeRepository.findById(exchangeId)
+//                .orElseThrow(() -> new IllegalArgumentException("Exchange request not found"));
+//
+//        if (exchange.getStatus() != ExchangeStatus.WAITING) {
+//            throw new IllegalArgumentException("Can only cancel WAITING exchange requests");
+//        }
+//
+//        exchange.setStatus(ExchangeStatus.DECLINED);
+//        exchange.setUpdatedAt(OffsetDateTime.now());
+//
+//        ExchangeRequest updated = exchangeRepository.save(exchange);
+//        log.info("Exchange request {} canceled by admin", exchangeId);
+//
+//        return toResponse(updated);
+//    }
 
     private ExchangeRequestResponse toResponse(ExchangeRequest exchange) {
         return new ExchangeRequestResponse(
