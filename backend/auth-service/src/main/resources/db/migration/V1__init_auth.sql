@@ -12,13 +12,13 @@ CREATE INDEX idx_users_email ON users(email);
 INSERT INTO users (email, display_name, password_hash, role, created_at)
 VALUES ('admin@bookswap.com', 
         'Administrator', 
-        '$2a$10$XcDaZgXWQ8r5cmMSnW75MOPnooX/W/DUdZ6xbXDzwfev9F35VVqw6',
+        '$2a$10$FPUtiG2kFVIISLPNY6TBU.tPLU0Ck5/WrhGaD9nqrBFbLq2wQv5LS',
         'ADMIN',
         NOW());
 
 INSERT INTO users (email, display_name, password_hash, role, created_at)
 VALUES ('publisher@bookswap.com',
         'Test Publisher',
-        '$2a$10$FoVekwALyJrqMUS/QXdRZuVZRFhJdA1qED9vy8.Pe.sOne0dzrDVG',
+        '$2a$10$FPUtiG2kFVIISLPNY6TBU.tPLU0Ck5/WrhGaD9nqrBFbLq2wQv5LS',
         'PUBLISHER',
         NOW());

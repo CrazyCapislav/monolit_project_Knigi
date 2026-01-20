@@ -19,15 +19,15 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-//    /**
-//     * Public registration (role = USER by default)
-//     */
-//    @PostMapping("/register")
-//    @ResponseStatus(HttpStatus.CREATED)
-//    public Mono<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-//        log.info("Registration request for email: {}", request.email());
-//        return userService.register(request);
-//    }
+    /**
+     * Public registration (role = USER by default)
+     */
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("Registration request for email: {}", request.email());
+        return userService.register(request);
+    }
 
     /**
      * Login and get JWT token

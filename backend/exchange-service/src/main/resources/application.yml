@@ -3,3 +3,47 @@ spring:
     name: exchange-service
   config:
     import: optional:configserver:${SPRING_CONFIG_IMPORT:http://localhost:8888}
+
+# Circuit Breaker configuration for Resilience4j
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 1
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        slowCallRateThreshold: 100
+        slowCallDurationThreshold: 2s
+        # Ignore FeignException with 4xx status codes (client errors)
+        ignoreExceptions:
+          - feign.FeignException$BadRequest
+          - feign.FeignException$Unauthorized
+          - feign.FeignException$Forbidden
+          - feign.FeignException$NotFound
+          - feign.FeignException$MethodNotAllowed
+          - feign.FeignException$Conflict
+          - feign.FeignException$UnprocessableEntity
+    instances:
+      bookService:
+        baseConfig: default
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 1
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+
+# Feign configuration with Circuit Breaker
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+      book-service:
+        connectTimeout: 2000
+        readTimeout: 2000

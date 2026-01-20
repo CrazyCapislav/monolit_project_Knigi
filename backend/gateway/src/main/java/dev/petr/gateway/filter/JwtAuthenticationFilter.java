@@ -59,9 +59,11 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 log.info("JWT validated - User: {}, Email: {}, Role: {}", userId, email, role);
 
                 ServerHttpRequest modifiedRequest = request.mutate()
-                        .header("X-User-Id", userId)
-                        .header("X-User-Email", email)
-                        .header("X-User-Role", "ROLE_" + role)  // ← Добавляем префикс ROLE_
+                        .headers(headers -> {
+                            headers.set("X-User-Id", userId);
+                            headers.set("X-User-Email", email);
+                            headers.set("X-User-Role", "ROLE_" + role);
+                        })
                         .build();
 
                 log.debug("Added headers: X-User-Id={}, X-User-Role={}", userId, "ROLE_" + role);
@@ -99,6 +101,5 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     public static class Config {
-        // Configuration properties if needed
     }
 }

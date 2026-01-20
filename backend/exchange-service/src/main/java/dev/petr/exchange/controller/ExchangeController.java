@@ -23,10 +23,7 @@ public class ExchangeController {
 
     private final ExchangeService exchangeService;
 
-    /**
-     * Create a new exchange request
-     * Only USER role can create exchanges
-     */
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ExchangeRequestResponse create(
@@ -42,10 +39,7 @@ public class ExchangeController {
         return exchangeService.create(userId, request);
     }
 
-    /**
-     * Accept an exchange request
-     * Only the book owner (USER role) can accept
-     */
+
     @PutMapping("/{id}/accept")
     public ExchangeRequestResponse accept(
             @PathVariable Long id,
@@ -60,9 +54,6 @@ public class ExchangeController {
         return exchangeService.accept(id, ownerId);
     }
 
-    /**
-     * Reject an exchange request (если есть такой метод)
-     */
     @PutMapping("/{id}/reject")
     public ExchangeRequestResponse reject(
             @PathVariable Long id,
@@ -77,11 +68,7 @@ public class ExchangeController {
         return exchangeService.reject(id, ownerId);
     }
 
-    /**
-     * Get paginated list of exchange requests
-     * USER sees exchanges they're involved in
-     * ADMIN sees all exchanges
-     */
+
     @GetMapping
     public ResponseEntity<List<ExchangeRequestResponse>> page(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -96,7 +83,7 @@ public class ExchangeController {
             p = exchangeService.page(page, size);
         } else if (role != null && role.equals("ROLE_USER")) {
             log.debug("User {} viewing own exchanges", userId);
-            p = exchangeService.page(page, size); // Или создайте метод pageForUser если нужна фильтрация
+            p = exchangeService.page(page, size); 
         } else {
             throw new IllegalArgumentException("Access denied");
         }
