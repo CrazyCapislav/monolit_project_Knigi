@@ -185,14 +185,16 @@ public class ExchangeService {
             bookServiceClient.updateOwner(
                     exchange.getBookRequestedId(),
                     new UpdateBookOwnerRequest(exchange.getRequesterId()),
-                    ownerId
+                    ownerId,
+                    "ROLE_USER"
             );
 
             if (exchange.getBookOfferedId() != null) {
                 bookServiceClient.updateOwner(
                         exchange.getBookOfferedId(),
                         new UpdateBookOwnerRequest(ownerId),
-                        exchange.getRequesterId()
+                        exchange.getRequesterId(),
+                        "ROLE_USER"
                 );
             }
 

@@ -73,7 +73,7 @@ public class BookController {
         return bookService.feed(afterId, limit);
     }
 
-    @GetMapping("/mine")
+    @GetMapping("/mybooks")
     public Flux<BookResponse> getMyBooks(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId
     ) {

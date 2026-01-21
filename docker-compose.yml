@@ -45,7 +45,7 @@ services:
       - "8888:8888"
     environment:
       EUREKA_URI: http://eureka-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/FreezinMoon/bookswap-config.git
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/CrazyCapislav/configRepo.git
       SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: main
       SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START: "true"
       SPRING_CLOUD_CONFIG_SERVER_GIT_FORCE_PULL: "true"

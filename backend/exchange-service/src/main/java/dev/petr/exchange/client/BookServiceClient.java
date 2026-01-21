@@ -22,6 +22,7 @@ public interface BookServiceClient {
     BookResponse updateOwner(
             @PathVariable("id") Long bookId,
             @RequestBody UpdateBookOwnerRequest request,
-            @RequestHeader("X-User-Id") Long userId
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String userRole
     );
 }
