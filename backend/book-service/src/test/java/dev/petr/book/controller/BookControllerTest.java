@@ -246,7 +246,7 @@ class BookControllerTest {
                 .thenReturn(Flux.just(response));
 
         webTestClient.get()
-                .uri("/api/v1/books/mine")
+                .uri("/api/v1/books/mybooks")
                 .header("X-User-Id", "1")
                 .exchange()
                 .expectStatus().isOk()
