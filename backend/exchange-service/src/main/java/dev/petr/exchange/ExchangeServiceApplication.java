@@ -11,3 +11,4 @@ public class ExchangeServiceApplication {
         SpringApplication.run(ExchangeServiceApplication.class, args);
     }
 }
+

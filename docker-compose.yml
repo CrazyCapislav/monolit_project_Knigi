@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: bookswap-postgres
+    container_name: bookswap-postgres-3
     environment:
       POSTGRES_USER: bookswap
       POSTGRES_PASSWORD: bookswap
@@ -18,12 +18,112 @@ services:
       timeout: 5s
       retries: 5
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: bookswap-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - bookswap-network
+
+  kafka-1:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: bookswap-kafka-1
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    networks:
+      - bookswap-network
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: bookswap-kafka-2
+    depends_on:
+      - zookeeper
+    ports:
+      - "29093:29093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9092,EXTERNAL://localhost:29093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    networks:
+      - bookswap-network
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: bookswap-kafka-3
+    depends_on:
+      - zookeeper
+    ports:
+      - "29094:29094"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:9092,EXTERNAL://localhost:29094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    networks:
+      - bookswap-network
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: bookswap-kafka-init
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    volumes:
+      - ./kafka-init/init-topics.sh:/init-topics.sh
+    command: ["/bin/bash", "/init-topics.sh"]
+    networks:
+      - bookswap-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: bookswap-kafka-ui
+    ports:
+      - "8089:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: bookswap
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    networks:
+      - bookswap-network
+
   eureka-server:
     build:
       context: .
       args:
         SERVICE_NAME: eureka-server
-    container_name: bookswap-eureka
+    container_name: bookswap-eureka-3
     ports:
       - "8761:8761"
     networks:
@@ -40,13 +140,13 @@ services:
       context: .
       args:
         SERVICE_NAME: config-server
-    container_name: bookswap-config
+    container_name: bookswap-config-3
     ports:
       - "8888:8888"
     environment:
       EUREKA_URI: http://eureka-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/FreezinMoon/bookswap-config.git
-      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: lab4-config
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/CrazyCapislav/configRepo.git
+      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: main
       SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START: "true"
       SPRING_CLOUD_CONFIG_SERVER_GIT_FORCE_PULL: "true"
     depends_on:
@@ -66,7 +166,7 @@ services:
       context: .
       args:
         SERVICE_NAME: gateway
-    container_name: bookswap-gateway
+    container_name: bookswap-gateway-3
     ports:
       - "8080:8080"
     environment:
@@ -87,7 +187,7 @@ services:
       context: .
       args:
         SERVICE_NAME: auth-service
-    container_name: bookswap-auth
+    container_name: bookswap-auth-3
     ports:
       - "8081:8081"
     environment:
@@ -114,12 +214,13 @@ services:
       context: .
       args:
         SERVICE_NAME: book-service
-    container_name: bookswap-books
+    container_name: bookswap-books-3
     ports:
       - "8082:8082"
     environment:
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: bookswap_books
@@ -133,6 +234,12 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
+      kafka-1:
+        condition: service_started
+      kafka-2:
+        condition: service_started
+      kafka-3:
+        condition: service_started
     networks:
       - bookswap-network
 
@@ -141,12 +248,13 @@ services:
       context: .
       args:
         SERVICE_NAME: exchange-service
-    container_name: bookswap-exchange
+    container_name: bookswap-exchange-3
     ports:
       - "8083:8083"
     environment:
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: bookswap_exchanges
@@ -170,12 +278,13 @@ services:
       context: .
       args:
         SERVICE_NAME: publication-service
-    container_name: bookswap-publication
+    container_name: bookswap-publication-3
     ports:
       - "8084:8084"
     environment:
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: bookswap_publications
@@ -194,17 +303,52 @@ services:
     networks:
       - bookswap-network
 
+  file-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: file-service
+    container_name: bookswap-file-3
+    ports:
+      - "8086:8086"
+    environment:
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: bookswap_files
+      DB_USER: bookswap
+      DB_PASSWORD: bookswap
+      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-please-make-it-long
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      kafka-1:
+        condition: service_started
+      kafka-2:
+        condition: service_started
+      kafka-3:
+        condition: service_started
+    networks:
+      - bookswap-network
+
   notification-service:
     build:
       context: .
       args:
         SERVICE_NAME: notification-service
-    container_name: bookswap-notifications
+    container_name: bookswap-notification-3
     ports:
-      - "8085:8085"
+      - "8087:8087"
     environment:
       EUREKA_URI: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: bookswap_notifications
@@ -227,162 +371,21 @@ services:
     networks:
       - bookswap-network
 
-  file-service:
-    build:
-      context: .
-      args:
-        SERVICE_NAME: file-service
-    container_name: bookswap-files
+  adminer:
+    image: adminer:latest
+    container_name: bookswap-adminer
     ports:
-      - "8086:8086"
+      - "8085:8080"
     environment:
-      EUREKA_URI: http://eureka-server:8761/eureka/
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: bookswap_files
-      DB_USER: bookswap
-      DB_PASSWORD: bookswap
-      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-please-make-it-long
+      ADMINER_DEFAULT_SERVER: postgres
     depends_on:
       postgres:
         condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      kafka-1:
-        condition: service_started
-      kafka-2:
-        condition: service_started
-      kafka-3:
-        condition: service_started
-    volumes:
-      - file-storage:/app/uploads
     networks:
       - bookswap-network
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: bookswap-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-    networks:
-      - bookswap-network
-    volumes:
-      - zookeeper-data:/var/lib/zookeeper/data
-      - zookeeper-logs:/var/lib/zookeeper/log
-
-  kafka-1:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: bookswap-kafka-1
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-      KAFKA_MIN_IN_SYNC_REPLICAS: 2
-    networks:
-      - bookswap-network
-    volumes:
-      - kafka-1-data:/var/lib/kafka/data
-
-  kafka-2:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: bookswap-kafka-2
-    depends_on:
-      - zookeeper
-    ports:
-      - "9093:9093"
-    environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:29092,PLAINTEXT_HOST://localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-      KAFKA_MIN_IN_SYNC_REPLICAS: 2
-    networks:
-      - bookswap-network
-    volumes:
-      - kafka-2-data:/var/lib/kafka/data
-
-  kafka-3:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: bookswap-kafka-3
-    depends_on:
-      - zookeeper
-    ports:
-      - "9094:9094"
-    environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:29092,PLAINTEXT_HOST://localhost:9094
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-      KAFKA_MIN_IN_SYNC_REPLICAS: 2
-    networks:
-      - bookswap-network
-    volumes:
-      - kafka-3-data:/var/lib/kafka/data
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: bookswap-kafka-ui
-    depends_on:
-      - kafka-1
-      - kafka-2
-      - kafka-3
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: bookswap-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:29092,kafka-2:29092,kafka-3:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-    networks:
-      - bookswap-network
-
-  kafka-init:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: bookswap-kafka-init
-    depends_on:
-      - kafka-1
-      - kafka-2
-      - kafka-3
-    volumes:
-      - ./kafka-init/init-topics.sh:/tmp/init-topics.sh
-    command: "bash /tmp/init-topics.sh"
-    networks:
-      - bookswap-network
-    restart: on-failure
 
 volumes:
   postgres-data:
-  zookeeper-data:
-  zookeeper-logs:
-  kafka-1-data:
-  kafka-2-data:
-  kafka-3-data:
-  file-storage:
 
 networks:
   bookswap-network:

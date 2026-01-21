@@ -22,7 +22,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Testcontainers
+@SuppressWarnings("resource")
+@Testcontainers(disabledWithoutDocker = true)
 public class NotificationServiceIntegrationTest {
 
     @Container
