@@ -1,17 +1,33 @@
-# IntelliJ IDEA
-.idea/
-backend/.idea/
-backend/**/.idea/
-
 # Build outputs
-backend/target/
-backend/*/target/
-backend/**/target/
-backend/**/target/**
 **/target/
-**/target/**
+**/build/
+**/bin/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 
-# Local config
+# Gradle
+.gradle/
+**/.gradle/
+
+# Node
+node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+**/.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local
+.env
 .claude/
 .m2/
-.vscode/
+*.backup
+*.log
