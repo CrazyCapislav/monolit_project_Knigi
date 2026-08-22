@@ -4,7 +4,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+
+import dev.petr.bookswap.TestcontainersConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
@@ -16,15 +19,14 @@ import jakarta.persistence.PersistenceContext;
 /**
  * Base class for integration tests.
  * 
- * Uses existing PostgreSQL container from docker-compose.
- * Before running tests, ensure docker-compose is running:
- *   docker-compose up -d db
+ * Runs against a disposable PostgreSQL container (see TestcontainersConfiguration).
  * 
- * Database connection settings are taken from application-test.yml.
+ * No manually started database is required.
  * 
  * Database is automatically cleaned before and after each test.
  */
 @SpringBootTest
+@Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
     

@@ -1,0 +1,21 @@
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  # No datasource here on purpose. The connection is supplied by the PostgreSQL
+  # container declared in TestcontainersConfiguration through @ServiceConnection.
+  # An explicit spring.datasource.* here would override it and tie the suite to
+  # a database started by hand.
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
