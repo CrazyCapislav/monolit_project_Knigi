@@ -3,3 +3,6 @@
 	url = https://github.com/CrazyCapislav/configRepo
 
 
+[submodule "backend/config-server/configs-repo"]
+	path = backend/config-server/configs-repo
+	url = https://github.com/CrazyCapislav/configRepo
