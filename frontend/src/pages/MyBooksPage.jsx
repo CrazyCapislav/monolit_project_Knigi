@@ -15,7 +15,7 @@ const MyBooksPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const { currentUser, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

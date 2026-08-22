@@ -7,9 +7,11 @@ const Footer = () => {
       <div className="footer-container">
         <p className="footer-text">© 2025 BookSwap. Все права защищены.</p>
         <div className="footer-links">
-          <a href="#" className="footer-link">О нас</a>
-          <a href="#" className="footer-link">Контакты</a>
-          <a href="#" className="footer-link">Помощь</a>
+          {/* Разделы ещё не реализованы: кнопки вместо ссылок с href="#",
+              которые ломают навигацию с клавиатуры и скринридеры. */}
+          <button type="button" className="footer-link">О нас</button>
+          <button type="button" className="footer-link">Контакты</button>
+          <button type="button" className="footer-link">Помощь</button>
         </div>
       </div>
     </footer>

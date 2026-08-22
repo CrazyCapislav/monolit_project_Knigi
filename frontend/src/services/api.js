@@ -1,38 +1,6 @@
 import { API_BASE_URL } from '../utils/constants';
 
 
-const toSnakeCase = (obj) => {
-  if (obj === null || typeof obj !== 'object' || obj instanceof Date) {
-    return obj;
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.map(toSnakeCase);
-  }
-
-  return Object.keys(obj).reduce((result, key) => {
-    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    result[snakeKey] = toSnakeCase(obj[key]);
-    return result;
-  }, {});
-};
-
-const toCamelCase = (obj) => {
-  if (obj === null || typeof obj !== 'object' || obj instanceof Date) {
-    return obj;
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.map(toCamelCase);
-  }
-
-  return Object.keys(obj).reduce((result, key) => {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-    result[camelKey] = toCamelCase(obj[key]);
-    return result;
-  }, {});
-};
-
 const getHeaders = (userId) => {
   const headers = {
     'Content-Type': 'application/json'

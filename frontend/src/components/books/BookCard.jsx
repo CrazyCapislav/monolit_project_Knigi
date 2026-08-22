@@ -1,7 +1,6 @@
 import React from 'react';
 import Card from '../common/Card';
 import { BOOK_CONDITIONS } from '../../utils/constants';
-import { formatDate } from '../../utils/helpers';
 import './BookCard.css';
 
 const BookCard = ({ book, onClick }) => {

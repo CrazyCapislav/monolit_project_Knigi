@@ -15,7 +15,9 @@ import {useAuth} from "../context/AuthContext";
 const HomePage = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
+  // hasMore пока не читается: пагинация на главной не реализована,
+  // но признак «есть ещё» уже вычисляется в loadBooks.
+  const [, setHasMore] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const { toast, showToast, hideToast } = useToast();
   const navigate = useNavigate();

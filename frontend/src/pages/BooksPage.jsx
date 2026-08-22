@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import BookList from '../components/books/BookList';
 import BookDetail from '../components/books/BookDetail';
@@ -26,14 +26,6 @@ const BooksPage = () => {
   const { isAuthenticated, currentUser } = useAuth();
   const { toast, showToast, hideToast } = useToast();
 
-  useEffect(() => {
-    loadGenres();
-  }, []);
-
-  useEffect(() => {
-    loadBooks();
-  }, [currentPage]);
-
   const loadGenres = async () => {
     try {
       const data = await genreService.getGenres();
@@ -43,7 +35,9 @@ const BooksPage = () => {
     }
   };
 
-  const loadBooks = async () => {
+  // useCallback: функция попадает в зависимости эффекта ниже, поэтому должна
+  // пересоздаваться только при смене страницы.
+  const loadBooks = useCallback(async () => {
     try {
       setLoading(true);
       const data = await bookService.getBooks(currentPage, 20);
@@ -54,7 +48,15 @@ const BooksPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage]);
+
+  useEffect(() => {
+    loadGenres();
+  }, []);
+
+  useEffect(() => {
+    loadBooks();
+  }, [loadBooks]);
 
   const handleGenreFilter = (genreId) => {
     setSelectedGenre(genreId === selectedGenre ? null : genreId);

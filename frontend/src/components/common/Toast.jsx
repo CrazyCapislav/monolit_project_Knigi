@@ -1,34 +1,46 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './Toast.css';
 
 const Toast = ({ message, type = 'success', isVisible, onClose, duration = 3000 }) => {
     const [isAnimating, setIsAnimating] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
 
+    // onClose приходит из родителя и обычно пересоздаётся на каждый рендер.
+    // Держим его в ref, чтобы handleClose оставался стабильным: иначе эффект
+    // ниже перезапускался бы на каждый рендер и менял состояние по кругу.
+    const onCloseRef = useRef(onClose);
     useEffect(() => {
-        if (isVisible) {
-            setShouldRender(true);
-            setTimeout(() => setIsAnimating(true), 10);
+        onCloseRef.current = onClose;
+    });
 
-            if (duration > 0) {
-                const timer = setTimeout(() => {
-                    handleClose();
-                }, duration);
-                return () => clearTimeout(timer);
-            }
-        } else {
-            handleClose();
-        }
-    }, [isVisible, duration]);
-
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setIsAnimating(false);
 
         setTimeout(() => {
             setShouldRender(false);
-            onClose();
+            onCloseRef.current?.();
         }, 300);
-    };
+    }, []);
+
+    useEffect(() => {
+        if (isVisible) {
+            setShouldRender(true);
+            const appear = setTimeout(() => setIsAnimating(true), 10);
+
+            if (duration > 0) {
+                const timer = setTimeout(handleClose, duration);
+                return () => {
+                    clearTimeout(appear);
+                    clearTimeout(timer);
+                };
+            }
+
+            return () => clearTimeout(appear);
+        }
+
+        handleClose();
+        return undefined;
+    }, [isVisible, duration, handleClose]);
 
     if (!shouldRender) return null;
 
